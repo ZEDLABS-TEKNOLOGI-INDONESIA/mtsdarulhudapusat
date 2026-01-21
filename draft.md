@@ -22,7 +22,7 @@
     "sticky_header": true,
     "theme_switcher": true,
     "default_theme": "system",
-    "pagination": 10,
+    "pagination": 8,
     "summary_length": 200,
     "blog_folder": "blog"
   },
@@ -49,6 +49,7 @@
     "meta_description": "Petugas Pengelola Administrasi Belanja Pegawai (PPABP), Customer Service Officer (CSO), Web Developer, System Administrator di MTs Negeri 1 Pandeglang"
   }
 }
+
 ```
 
 ---
@@ -108,7 +109,7 @@
         },
         {
           "name": "Kalender Pendidikan",
-          "url": "#"
+          "url": "https://drive.google.com/file/d/1Vm7L6Mj0iy4-PTFAHZWIRggL4R0KBqjD/view"
         }
       ]
     },
@@ -245,6 +246,7 @@
     }
   ]
 }
+
 ```
 
 ---
@@ -276,6 +278,7 @@
     }
   ]
 }
+
 ```
 
 ---
@@ -327,6 +330,7 @@
     }
   }
 }
+
 ```
 
 ---
@@ -478,6 +482,7 @@ export const collections = {
   ctaSection: ctaSectionCollection,
   testimonialSection: testimonialSectionCollection,
 };
+
 ```
 
 ---
@@ -520,6 +525,7 @@ Menciptakan budaya keunggulan tanpa henti. Kami memfasilitasi setiap potensi uni
 Melalui dedikasi tenaga pendidik profesional dan transformasi digital yang berkelanjutan, kami berkomitmen mencetak pemimpin masa depan yang paripurna.
 
 > _Mandiri, Takwa, Peduli Lingkungan, Prestasi_
+
 ```
 
 ---
@@ -549,6 +555,7 @@ Dedicated to orchestrating digital transformation within the educational sector.
 Beyond the code, I am a problem solver committed to building efficient, scalable, and user-centric applications. When not architecting the next system update, you can find me exploring emerging tech trends or enjoying the serene atmosphere of Pandeglang.
 
 _Let's innovate and build the future of education together._
+
 ```
 
 ---
@@ -563,6 +570,7 @@ description: "Penulis Artikel MTs Negeri 1 Pandeglang"
 image: ""
 draft: false
 ---
+
 ```
 
 ---
@@ -577,6 +585,7 @@ description: "Artikel MTs Negeri 1 Pandeglang"
 image: ""
 draft: false
 ---
+
 ```
 
 ---
@@ -591,6 +600,7 @@ meta_title: "Kontak MTs Negeri 1 Pandeglang"
 draft: false
 image: ""
 ---
+
 ```
 
 ---
@@ -699,6 +709,7 @@ features:
       label: "Lihat Ekstrakurikuler"
       link: "/ekstrakurikuler"
 ---
+
 ```
 
 ---
@@ -733,6 +744,7 @@ MTs Negeri 1 Pandeglang berkomitmen untuk melindungi informasi pribadi yang diku
 2. Setiap perubahan dalam kebijakan privasi akan diumumkan di situs web kami dan pengguna akan diberitahu melalui email.
 3. Pengguna dianjurkan untuk secara berkala memeriksa kebijakan privasi ini untuk mengetahui pembaruan terbaru.
 4. Dengan terus menggunakan layanan kami setelah perubahan kebijakan, pengguna dianggap menyetujui perubahan tersebut.
+
 ```
 
 ---
@@ -750,6 +762,7 @@ button:
   label: "Daftar Sekarang"
   link: "https://daftar.mtsn1pandeglang.sch.id"
 ---
+
 ```
 
 ---
@@ -854,6 +867,7 @@ testimonials:
     avatar: "/images/avatar-sm.png"
     content: "MTs Negeri 1 Pandeglang punya semangat inovatif. Banyak teknologi pembelajaran diterapkan secara menarik."
 ---
+
 ```
 
 ---
@@ -876,6 +890,7 @@ const useTheme = (): string => {
 };
 
 export default useTheme;
+
 ```
 
 ---
@@ -1083,6 +1098,7 @@ const { title, meta_title, description, image, noindex, canonical } =
     </script>
   </body>
 </html>
+
 ```
 
 ---
@@ -1221,6 +1237,7 @@ const { title, description, author, categories, image, date, tags } = post.data;
     </div>
   </div>
 </section>
+
 ```
 
 ---
@@ -1259,6 +1276,7 @@ const { title, image, social } = data.data;
   </p>
   <Social source={social} className="social-icons" />
 </div>
+
 ```
 
 ---
@@ -1330,6 +1348,7 @@ const { title, image, date, author, categories } = data.data;
     selengkapnya
   </a>
 </div>
+
 ```
 
 ---
@@ -1382,6 +1401,7 @@ paths.forEach((label: string, i: number) => {
     }
   </ol>
 </nav>
+
 ```
 
 ---
@@ -1442,6 +1462,7 @@ const isValidPath = images[src] ? true : false;
     />
   )
 }
+
 ```
 
 ---
@@ -1512,6 +1533,7 @@ const { theme_switcher }: { theme_switcher: boolean } = config.settings;
     )
   }
 </a>
+
 ```
 
 ---
@@ -1653,6 +1675,7 @@ for (let i = 1; i <= totalPages; i++) {
     </nav>
   )
 }
+
 ```
 
 ---
@@ -1712,6 +1735,7 @@ const {
     </a>
   </li>
 </ul>
+
 ```
 
 ---
@@ -1747,6 +1771,7 @@ export interface ISocial {
     ))
   }
 </ul>
+
 ```
 
 ---
@@ -1845,6 +1870,7 @@ const { className }: { className?: string } = Astro.props;
   // Runs on view transitions navigation
   document.addEventListener("astro:after-swap", setDarkMode);
 </script>
+
 ```
 
 ---
@@ -1868,6 +1894,7 @@ const { className }: { className?: string } = Astro.props;
     </div>
   )
 }
+
 ```
 
 ---
@@ -2581,7 +2608,7 @@ const AdminDashboard = () => {
       <div className="flex min-h-[60vh] flex-col items-center justify-center">
         <div className="w-full max-w-md rounded-2xl border border-border bg-white p-8 text-center shadow-xl dark:border-darkmode-border dark:bg-darkmode-light">
           <img
-            src="/images/brand-lightmode.png"
+            src="/images/logo.png"
             alt="Logo"
             className="mx-auto mb-6 h-12"
           />
@@ -4477,6 +4504,7 @@ const DataTable = ({
 };
 
 export default AdminDashboard;
+
 ```
 
 ---
@@ -4519,6 +4547,7 @@ const CardViewCounter = ({ slug }: Props) => {
 };
 
 export default CardViewCounter;
+
 ```
 
 ---
@@ -4545,7 +4574,7 @@ const CookieConsent = () => {
       consent_status: "granted",
     });
 
-    console.log("GTM Consent: Granted");
+    // console.log("GTM Consent: Granted");
   };
 
   useEffect(() => {
@@ -4617,6 +4646,7 @@ const CookieConsent = () => {
 };
 
 export default CookieConsent;
+
 ```
 
 ---
@@ -4657,6 +4687,7 @@ const getIconLibrary = (icon: string): IconMap | undefined => {
 };
 
 export default DynamicIcon;
+
 ```
 
 ---
@@ -4718,6 +4749,7 @@ const GiscusComment = () => {
 };
 
 export default GiscusComment;
+
 ```
 
 ---
@@ -4757,20 +4789,20 @@ const InstallPrompt = () => {
     });
 
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log("beforeinstallprompt event fired");
+      // console.log("beforeinstallprompt event fired");
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
       if (!sessionDismissed) {
         setTimeout(() => {
-          console.log("Showing install prompt");
+          // console.log("Showing install prompt");
           setShowInstallPrompt(true);
         }, 3000);
       }
     };
 
-    console.log("InstallPrompt mounted, isIOS:", isIOSDevice);
-    console.log("Session dismissed:", sessionDismissed);
+    // console.log("InstallPrompt mounted, isIOS:", isIOSDevice);
+    // console.log("Session dismissed:", sessionDismissed);
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
@@ -4791,7 +4823,7 @@ const InstallPrompt = () => {
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === "accepted") {
-        console.log("PWA installed successfully");
+        // console.log("PWA installed successfully");
       }
 
       setDeferredPrompt(null);
@@ -4877,6 +4909,7 @@ const InstallPrompt = () => {
 };
 
 export default InstallPrompt;
+
 ```
 
 ---
@@ -4925,6 +4958,7 @@ const PostViewCounter = () => {
 };
 
 export default PostViewCounter;
+
 ```
 
 ---
@@ -5244,6 +5278,7 @@ export default function ProfilMahasiswaPLP() {
     </div>
   );
 }
+
 ```
 
 ---
@@ -5486,6 +5521,7 @@ const SearchModal = () => {
 };
 
 export default SearchModal;
+
 ```
 
 ---
@@ -5747,6 +5783,7 @@ const SearchResult = ({
 };
 
 export default SearchResult;
+
 ```
 
 ---
@@ -5943,6 +5980,7 @@ const ServiceRating = () => {
 };
 
 export default ServiceRating;
+
 ```
 
 ---
@@ -6931,6 +6969,7 @@ const SurveyWizard = () => {
 };
 
 export default SurveyWizard;
+
 ```
 
 ---
@@ -7006,6 +7045,7 @@ const TawkChat = () => {
 };
 
 export default TawkChat;
+
 ```
 
 ---
@@ -7117,6 +7157,7 @@ const VideoModal = ({
 };
 
 export default VideoModal;
+
 ```
 
 ---
@@ -7163,6 +7204,7 @@ const VisitorCounter = () => {
 };
 
 export default VisitorCounter;
+
 ```
 
 ---
@@ -7216,6 +7258,7 @@ const { call_to_action } = Astro.props;
     </section>
   )
 }
+
 ```
 
 ---
@@ -7267,6 +7310,7 @@ const { footer }: { footer: { name: string; url: string }[] } = menu;
     </div>
   </div>
 </footer>
+
 ```
 
 ---
@@ -7513,6 +7557,7 @@ const { pathname } = Astro.url;
     }
   }
 </style>
+
 ```
 
 ---
@@ -7660,6 +7705,7 @@ const latestPosts = sortedPosts.slice(0, 6);
 
   document.addEventListener("astro:page-load", initLatestPostsSlider);
 </script>
+
 ```
 
 ---
@@ -7684,6 +7730,7 @@ const { title = "" }: { title?: string } = Astro.props;
     </div>
   </div>
 </section>
+
 ```
 
 ---
@@ -7779,6 +7826,7 @@ const { tags, categories, allCategories } = Astro.props;
     </div>
   </div>
 </div>
+
 ```
 
 ---
@@ -7898,6 +7946,7 @@ const { testimonial } = Astro.props;
     });
   });
 </script>
+
 ```
 
 ---
@@ -7941,6 +7990,7 @@ const Accordion = ({
 };
 
 export default Accordion;
+
 ```
 
 ---
@@ -7978,6 +8028,7 @@ const Button = ({
 };
 
 export default Button;
+
 ```
 
 ---
@@ -8070,6 +8121,7 @@ function Notice({
 }
 
 export default Notice;
+
 ```
 
 ---
@@ -8084,6 +8136,7 @@ function Tab({ name, children }: { name: string; children: React.ReactNode }) {
 }
 
 export default Tab;
+
 ```
 
 ---
@@ -8162,6 +8215,7 @@ const Tabs = ({ children }: { children: React.ReactElement }) => {
 };
 
 export default Tabs;
+
 ```
 
 ---
@@ -8201,6 +8255,7 @@ function Video({
 }
 
 export default Video;
+
 ```
 
 ---
@@ -8235,6 +8290,7 @@ const Youtube = ({
 };
 
 export default Youtube;
+
 ```
 
 ---
@@ -8286,6 +8342,7 @@ export const getListPage = async <C extends CollectionKey>(
   return data;
 };
 ---
+
 ```
 
 ---
@@ -8324,6 +8381,7 @@ export const getAllTaxonomy = async (collection: any, name: string) => {
   return taxonomies;
 };
 ---
+
 ```
 
 ---
@@ -8368,6 +8426,7 @@ const bgImageMod = async (
 };
 
 export default bgImageMod;
+
 ```
 
 ---
@@ -8388,6 +8447,7 @@ const dateFormat = (
 };
 
 export default dateFormat;
+
 ```
 
 ---
@@ -8429,6 +8489,7 @@ const readingTime = (content: string): string => {
 };
 
 export default readingTime;
+
 ```
 
 ---
@@ -8466,6 +8527,7 @@ const similarItems = (currentItem: any, allItems: any[]) => {
 };
 
 export default similarItems;
+
 ```
 
 ---
@@ -8496,6 +8558,7 @@ export const sortByWeight = (array: any[]) => {
   const sortedArray = [...new Set([...sortedWeightedArray, ...withoutWeight])];
   return sortedArray;
 };
+
 ```
 
 ---
@@ -8511,6 +8574,7 @@ const taxonomyFilter = (posts: any[], name: string, key: string) =>
   );
 
 export default taxonomyFilter;
+
 ```
 
 ---
@@ -8572,6 +8636,7 @@ const htmlEntityDecoder = (htmlWithEntities: string) => {
   );
   return htmlWithoutEntities;
 };
+
 ```
 
 ---
@@ -8606,6 +8671,7 @@ import Base from "@/layouts/Base.astro";
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8660,6 +8726,7 @@ if (aboutIndex.data.draft) {
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8687,6 +8754,7 @@ import AdminDashboard from "@/layouts/helpers/AdminDashboard";
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8725,6 +8793,7 @@ const authors = await getSinglePage("authors");
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8809,6 +8878,7 @@ const postFilterByAuthor = posts.filter(
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8877,6 +8947,7 @@ const currentPosts = sortedPosts.slice(0, config.settings.pagination);
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -8968,6 +9039,7 @@ export async function getStaticPaths() {
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9005,6 +9077,7 @@ const { title, meta_title, description, image } = post.data;
 >
   <PostSingle post={post} />
 </Base>
+
 ```
 
 ---
@@ -9051,6 +9124,7 @@ const allCategories = await getAllTaxonomy(BLOG_FOLDER, "categories");
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9102,6 +9176,7 @@ const sortedPosts = sortByDate(filterByCategories);
     </div>
   </div>
 </Base>
+
 ```
 
 ---
@@ -9181,6 +9256,7 @@ if (contactIndex.data.draft) {
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9373,6 +9449,7 @@ const { banner, features } = homepage.data;
 
   <TawkChat client:only="react" />
 </Base>
+
 ```
 
 ---
@@ -9412,6 +9489,7 @@ const description =
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9458,6 +9536,7 @@ const allTags = await getAllTaxonomy(BLOG_FOLDER, "tags");
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9509,6 +9588,7 @@ const sortedPosts = sortByDate(filterByTags);
     </div>
   </div>
 </Base>
+
 ```
 
 ---
@@ -9560,6 +9640,7 @@ const { Content } = await render(page);
     </div>
   </section>
 </Base>
+
 ```
 
 ---
@@ -9649,6 +9730,7 @@ export function initAnimations() {
 
   ScrollTrigger.refresh();
 }
+
 ```
 
 ---
@@ -9674,6 +9756,7 @@ export function initSpotlightButtons() {
 
   document.addEventListener("mousemove", handleMouseMove);
 }
+
 ```
 
 ---
@@ -9744,6 +9827,7 @@ blockquote > p {
 button {
   @apply cursor-pointer;
 }
+
 ```
 
 ---
@@ -9803,6 +9887,7 @@ button {
 .dark .btn-outline-primary {
   --spotlight-color: var(--color-darkmode-primary);
 }
+
 ```
 
 ---
@@ -9971,6 +10056,7 @@ button {
   @apply prose-tr:border-border dark:prose-tr:border-darkmode-border;
   @apply prose-td:relative prose-td:z-10 prose-td:px-3 prose-td:py-[18px] dark:prose-td:text-darkmode-text;
 }
+
 ```
 
 ---
@@ -9999,6 +10085,7 @@ button {
   @import "./buttons.css";
   @import "./search.css";
 }
+
 ```
 
 ---
@@ -10070,6 +10157,7 @@ button {
     }
   }
 }
+
 ```
 
 ---
@@ -10093,6 +10181,7 @@ input#nav-toggle:checked ~ #nav-menu {
 .swiper-pagination-bullet-active {
   @apply !w-8 !bg-primary dark:!bg-primary;
 }
+
 ```
 
 ---
@@ -10197,6 +10286,7 @@ input#nav-toggle:checked ~ #nav-menu {
 .search-result-item:hover .search-result-item-taxonomies {
   @apply text-white/90;
 }
+
 ```
 
 ---
@@ -10230,6 +10320,7 @@ input#nav-toggle:checked ~ #nav-menu {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out;
 }
+
 ```
 
 ---
@@ -10335,6 +10426,7 @@ module.exports = plugin.withOptions(() => {
     );
   };
 });
+
 ```
 
 ---
@@ -10477,6 +10569,7 @@ module.exports = plugin.withOptions(() => {
     );
   };
 });
+
 ```
 
 ---
@@ -10497,6 +10590,7 @@ export type Button = {
   label: string;
   link: string;
 };
+
 ```
 
 ---
@@ -11418,11 +11512,11 @@ try {
                 }
             } elseif ($type === 'survey') {
                 // PERBAIKAN: Query Insert untuk 6 Kategori
-                // Memastikan urutan kolom CSV:
+                // Memastikan urutan kolom CSV: 
                 // 0:Name, 1:Role, 2:ZI, 3:Srv, 4:Acd, 5:Fac, 6:Mgt, 7:Cul, 8:Msg, 9:Date, 10:IP
 
-                $stmt = $db->prepare("INSERT INTO survey_responses
-                    (respondent_name, respondent_role, score_zi, score_service, score_academic, score_facilities, score_management, score_culture, feedback, created_at, ip_address, details_json)
+                $stmt = $db->prepare("INSERT INTO survey_responses 
+                    (respondent_name, respondent_role, score_zi, score_service, score_academic, score_facilities, score_management, score_culture, feedback, created_at, ip_address, details_json) 
                     VALUES (:name, :role, :zi, :service, :acad, :fac, :mgt, :cul, :feedback, :created, :ip, '{}')");
 
                 while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
@@ -11716,14 +11810,14 @@ try {
     $articleViews = $db->querySingle("SELECT SUM(views) FROM post_stats") ?: 0;
 
     // Hitung Indeks (6 Kategori)
-    $indices = $db->querySingle("SELECT
-        AVG(score_zi) as zi,
-        AVG(score_service) as service,
+    $indices = $db->querySingle("SELECT 
+        AVG(score_zi) as zi, 
+        AVG(score_service) as service, 
         AVG(score_academic) as academic,
         AVG(score_facilities) as facilities,
         AVG(score_management) as management,
-        AVG(score_culture) as culture
-        FROM survey_responses
+        AVG(score_culture) as culture 
+        FROM survey_responses 
         WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y'", true);
 
     $idxZI = $indices ? round($indices['zi'] ?? 0, 2) : 0;
@@ -12380,6 +12474,7 @@ try {
   ],
   "categories": ["education"]
 }
+
 ```
 
 ---
@@ -12455,6 +12550,7 @@ try {
 } catch (err) {
   console.error(err);
 }
+
 ```
 
 ---
@@ -12494,9 +12590,9 @@ const path = require("path");
   function deleteAsset(asset) {
     try {
       fs.unlinkSync(asset);
-      console.log(`${path.basename(asset)} deleted successfully!`);
+      // console.log(`${path.basename(asset)} deleted successfully!`);
     } catch (error) {
-      console.error(`${asset} not found`);
+      // console.error(`${asset} not found`);
     }
   }
 
@@ -12550,6 +12646,7 @@ const path = require("path");
     delete currentObj[properties[properties.length - 1]];
   }
 })();
+
 ```
 
 ---
@@ -12562,6 +12659,24 @@ const path = require("path");
 # Google Auth
 PUBLIC_GOOGLE_CLIENT_ID=
 ADMIN_EMAIL=
+```
+
+---
+
+### File: `./TODO.MD`
+
+```
+sitemap
+https://mtsn1pandeglang.sch.id/blog/anugerah-satyalancana-karya-satya
+https://mtsn1pandeglang.sch.id/blog/guest-teacher-session-1
+https://mtsn1pandeglang.sch.id/blog/laporan-analisis-komprehensif-website-sekolah-indonesia
+https://mtsn1pandeglang.sch.id/blog/mtsn-1-pandeglang-banjir-prestasi
+https://mtsn1pandeglang.sch.id/blog/mtsn-1-pandeglang-raih-juara-1-nasional
+https://mtsn1pandeglang.sch.id/blog/penyaluran-makanan-bergizi-gratis-mbg
+https://mtsn1pandeglang.sch.id/blog/plp-kkn-uin-banten-2025
+https://mtsn1pandeglang.sch.id/blog/tasyakuran-kelulusan-dan-launching-pol
+https://mtsn1pandeglang.sch.id/blog/zona-integritas
+
 ```
 
 ---
@@ -12690,6 +12805,7 @@ export default defineConfig({
     extendDefaultPlugins: true,
   },
 });
+
 ```
 
 ---
@@ -12850,6 +12966,7 @@ log "=== DEPLOYMENT SUKSES! ==="
     "workbox-window": "^7.3.0"
   }
 }
+
 ```
 
 ---
@@ -12893,6 +13010,8 @@ log "=== DEPLOYMENT SUKSES! ==="
   "include": [".astro/types.d.ts", "**/*.ts", "**/*.tsx", "**/*.astro"],
   "exclude": ["node_modules", "dist"]
 }
+
 ```
 
 ---
+

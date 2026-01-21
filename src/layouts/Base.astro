@@ -196,5 +196,24 @@ const { title, meta_title, description, image, noindex, canonical } =
         initSpotlightButtons();
       });
     </script>
+    <script is:inline>
+      // Suppress Tawk.to errors
+      (function () {
+        const originalError = console.error;
+        console.error = function (...args) {
+          const errorString = args.join(" ");
+          // Filter error yang mengandung kata kunci Tawk.to
+          if (
+            errorString.includes("tawk.to") ||
+            errorString.includes("twk-chunk") ||
+            errorString.includes("Tawk/Widget-Settings") ||
+            errorString.includes("downloadable font")
+          ) {
+            return; // Skip logging error ini
+          }
+          originalError.apply(console, args);
+        };
+      })();
+    </script>
   </body>
 </html>
