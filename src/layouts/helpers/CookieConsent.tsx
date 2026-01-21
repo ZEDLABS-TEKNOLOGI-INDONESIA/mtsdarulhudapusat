@@ -17,7 +17,7 @@ const CookieConsent = () => {
       consent_status: "granted",
     });
 
-    console.log("GTM Consent: Granted");
+    // console.log("GTM Consent: Granted");
   };
 
   useEffect(() => {

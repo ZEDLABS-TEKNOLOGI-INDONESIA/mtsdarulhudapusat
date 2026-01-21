@@ -30,20 +30,20 @@ const InstallPrompt = () => {
     });
 
     const handleBeforeInstallPrompt = (e: Event) => {
-      console.log("beforeinstallprompt event fired");
+      // console.log("beforeinstallprompt event fired");
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
 
       if (!sessionDismissed) {
         setTimeout(() => {
-          console.log("Showing install prompt");
+          // console.log("Showing install prompt");
           setShowInstallPrompt(true);
         }, 3000);
       }
     };
 
-    console.log("InstallPrompt mounted, isIOS:", isIOSDevice);
-    console.log("Session dismissed:", sessionDismissed);
+    // console.log("InstallPrompt mounted, isIOS:", isIOSDevice);
+    // console.log("Session dismissed:", sessionDismissed);
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
@@ -64,7 +64,7 @@ const InstallPrompt = () => {
       const { outcome } = await deferredPrompt.userChoice;
 
       if (outcome === "accepted") {
-        console.log("PWA installed successfully");
+        // console.log("PWA installed successfully");
       }
 
       setDeferredPrompt(null);
