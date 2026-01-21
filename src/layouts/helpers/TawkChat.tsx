@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+
 declare global {
   interface Window {
     Tawk_API: any;
@@ -14,19 +15,20 @@ const TawkChat = () => {
     if (window.location.pathname !== "/") return;
     if (document.getElementById("tawk-script")) return;
 
-    // Suppress Tawk.to specific errors
-    const originalError = console.error;
-    console.error = function (...args) {
-      const errorString = args.join(" ");
-      if (
-        errorString.includes("tawk.to") ||
-        errorString.includes("twk-chunk") ||
-        errorString.includes("Tawk/Widget-Settings")
-      ) {
-        return;
-      }
-      originalError.apply(console, args);
+    // Block font error messages
+    const suppressFontErrors = () => {
+      const styleSheet = document.createElement("style");
+      styleSheet.textContent = `
+        @font-face {
+          font-family: 'tawk-icon';
+          font-display: optional;
+          src: local('tawk-icon');
+        }
+      `;
+      document.head.appendChild(styleSheet);
     };
+
+    suppressFontErrors();
 
     window.Tawk_API = window.Tawk_API || {};
     window.Tawk_LoadStart = new Date();
@@ -38,10 +40,7 @@ const TawkChat = () => {
     s1.charset = "UTF-8";
     s1.setAttribute("crossorigin", "*");
 
-    // Tangani error saat load script
-    s1.onerror = function (error) {
-      console.warn("Tawk.to widget failed to load (non-critical)");
-    };
+    s1.onerror = () => {};
 
     s1.onload = () => {
       try {
@@ -52,9 +51,7 @@ const TawkChat = () => {
             startAnimationLoop();
           }, 5000);
         };
-      } catch (error) {
-        console.warn("Tawk.to initialization skipped");
-      }
+      } catch {}
     };
 
     document.head.appendChild(s1);
@@ -62,9 +59,10 @@ const TawkChat = () => {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (window.Tawk_API && window.Tawk_API.hideWidget) {
-        window.Tawk_API.hideWidget();
+        try {
+          window.Tawk_API.hideWidget();
+        } catch {}
       }
-      console.error = originalError; // Restore original console.error
     };
   }, []);
 
@@ -79,9 +77,7 @@ const TawkChat = () => {
     if (!window.Tawk_API) return;
 
     try {
-      if (window.Tawk_API.isChatMaximized()) {
-        return;
-      }
+      if (window.Tawk_API.isChatMaximized()) return;
 
       if (isWidgetVisible.current) {
         window.Tawk_API.hideWidget();
@@ -90,9 +86,7 @@ const TawkChat = () => {
         window.Tawk_API.showWidget();
         isWidgetVisible.current = true;
       }
-    } catch (error) {
-      // Suppress toggle errors
-    }
+    } catch {}
   };
 
   return null;
