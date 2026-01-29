@@ -1,23 +1,18 @@
 <?php
 session_start();
 date_default_timezone_set('Asia/Jakarta');
-
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     header('HTTP/1.1 403 Forbidden');
     echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
     exit;
 }
-
 $dbPath = __DIR__ . '/../../database.db';
-
 try {
     if (!class_exists('SQLite3')) {
         throw new Exception("SQLite3 driver not installed.");
     }
-
     $db = new SQLite3($dbPath);
     $action = $_GET['action'] ?? 'stats';
-
     function formatTanggalIndo($timestamp)
     {
         try {
@@ -29,8 +24,6 @@ try {
             return $timestamp;
         }
     }
-
-    // Helper: Daily Activity
     function getSafeDailyActivity($db, $table, $days = 30)
     {
         $data = [];
@@ -52,24 +45,17 @@ try {
         }
         return $data;
     }
-
     if ($action === 'stats') {
         header('Content-Type: application/json');
-
-        // Overview
         $visits = $db->querySingle("SELECT value FROM global_stats WHERE key = 'site_visits'") ?: 0;
         $total_posts = $db->querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='post_stats'") ? ($db->querySingle("SELECT COUNT(*) FROM post_stats") ?: 0) : 0;
         $total_feedback = $db->querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='feedback'") ? ($db->querySingle("SELECT COUNT(*) FROM feedback") ?: 0) : 0;
         $total_survey = $db->querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='survey_responses'") ? ($db->querySingle("SELECT COUNT(*) FROM survey_responses") ?: 0) : 0;
-
-        // Charts data
         $stars = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0];
         if ($total_feedback > 0) {
             $resStar = $db->query("SELECT rating, COUNT(*) as count FROM feedback GROUP BY rating");
             while ($row = $resStar->fetchArray(SQLITE3_ASSOC)) $stars[$row['rating']] = $row['count'];
         }
-
-        // PERBAIKAN: Menambahkan 3 kategori baru ke rata-rata survei
         $survey_avg = [
             'zi' => 0,
             'service' => 0,
@@ -78,38 +64,27 @@ try {
             'management' => 0,
             'culture' => 0
         ];
-
         if ($total_survey > 0) {
-            // Cek apakah kolom baru sudah ada sebelum query agar tidak error jika migrasi belum jalan
             $cols = [];
             $resCol = $db->query("PRAGMA table_info(survey_responses)");
             while ($rowC = $resCol->fetchArray(SQLITE3_ASSOC)) $cols[] = $rowC['name'];
-
-            // Build query dinamis
             $selects = ["AVG(score_zi) as zi", "AVG(score_service) as service", "AVG(score_academic) as academic"];
-
             if (in_array('score_facilities', $cols)) $selects[] = "AVG(score_facilities) as facilities";
             if (in_array('score_management', $cols)) $selects[] = "AVG(score_management) as management";
             if (in_array('score_culture', $cols)) $selects[] = "AVG(score_culture) as culture";
-
             $sql = "SELECT " . implode(', ', $selects) . " FROM survey_responses";
             $avgQuery = $db->querySingle($sql, true);
-
             if ($avgQuery) {
                 $survey_avg['zi'] = round($avgQuery['zi'] ?? 0, 2);
                 $survey_avg['service'] = round($avgQuery['service'] ?? 0, 2);
                 $survey_avg['academic'] = round($avgQuery['academic'] ?? 0, 2);
-                // Tambahkan mapping untuk kolom baru
                 $survey_avg['facilities'] = round($avgQuery['facilities'] ?? 0, 2);
                 $survey_avg['management'] = round($avgQuery['management'] ?? 0, 2);
                 $survey_avg['culture'] = round($avgQuery['culture'] ?? 0, 2);
             }
         }
-
         $activity_feedback = getSafeDailyActivity($db, 'feedback');
         $activity_survey = getSafeDailyActivity($db, 'survey_responses');
-
-        // Tables Data
         $posts = [];
         if ($total_posts > 0) {
             $res = $db->query("SELECT slug, views FROM post_stats ORDER BY views DESC");
@@ -125,13 +100,11 @@ try {
             $res = $db->query("SELECT * FROM survey_responses ORDER BY created_at DESC");
             while ($row = $res->fetchArray(SQLITE3_ASSOC)) $surveys[] = $row;
         }
-
         $visit_logs = [];
         if ($db->querySingle("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='site_visit_logs'")) {
             $res = $db->query("SELECT * FROM site_visit_logs ORDER BY created_at DESC LIMIT 1000");
             while ($row = $res->fetchArray(SQLITE3_ASSOC)) $visit_logs[] = $row;
         }
-
         echo json_encode([
             'overview' => ['visits' => $visits, 'posts_count' => $total_posts, 'feedback_count' => $total_feedback, 'survey_count' => $total_survey],
             'charts' => [
@@ -149,13 +122,10 @@ try {
     } elseif ($action === 'export') {
         $type = $_GET['type'] ?? '';
         $filename = "laporan_{$type}_" . date('Y-m-d_His') . ".csv";
-
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="' . $filename . '"');
-
         $output = fopen('php://output', 'w');
         fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
         if ($type === 'feedback') {
             fputcsv($output, ['ID', 'Waktu (WIB)', 'Nama', 'Rating', 'Pesan', 'IP Address']);
             $res = $db->query("SELECT id, created_at, name, rating, message, ip_address FROM feedback ORDER BY created_at DESC");
@@ -164,27 +134,18 @@ try {
                 fputcsv($output, $row);
             }
         } elseif ($type === 'survey') {
-            // PERBAIKAN: Export mendukung 6 kategori
-            // Cek kolom dulu
             $cols = [];
             $resCol = $db->query("PRAGMA table_info(survey_responses)");
             while ($rowC = $resCol->fetchArray(SQLITE3_ASSOC)) $cols[] = $rowC['name'];
-
-            // Build Select
             $selectFields = "id, created_at, respondent_name, respondent_role, score_zi, score_service, score_academic";
             if (in_array('score_facilities', $cols)) $selectFields .= ", score_facilities";
             else $selectFields .= ", 0 as score_facilities";
-
             if (in_array('score_management', $cols)) $selectFields .= ", score_management";
             else $selectFields .= ", 0 as score_management";
-
             if (in_array('score_culture', $cols)) $selectFields .= ", score_culture";
             else $selectFields .= ", 0 as score_culture";
-
             $selectFields .= ", feedback, ip_address";
-
             fputcsv($output, ['ID', 'Waktu (WIB)', 'Nama', 'Peran', 'ZI', 'Pelayanan', 'Akademik', 'Sarpras', 'Manajemen', 'Budaya', 'Masukan', 'IP Address']);
-
             $res = $db->query("SELECT $selectFields FROM survey_responses ORDER BY created_at DESC");
             while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
                 $row['created_at'] = formatTanggalIndo($row['created_at']);
