@@ -3,6 +3,8 @@ ini_set('display_errors', 0);
 ini_set('log_errors', 1);
 session_start();
 date_default_timezone_set('Asia/Jakarta');
+require_once __DIR__ . '/config.php';
+
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     die("Akses Ditolak.");
 }
@@ -10,52 +12,62 @@ if (!file_exists(__DIR__ . '/lib/fpdf.php')) {
     die("Error: Library FPDF tidak ditemukan.");
 }
 require('lib/fpdf.php');
-$dbPath = __DIR__ . '/../../database.db';
+
 try {
-    $db = new SQLite3($dbPath);
+    $pdo = getDBConnection();
 } catch (Exception $e) {
     die("Error DB: " . $e->getMessage());
 }
+
 $month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
 $year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 $bulanIndo = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 $periodeText = strtoupper($bulanIndo[$month] . ' ' . $year);
+
 function getIndonesianDate($timestamp = null)
 {
     $dt = new DateTime($timestamp ?? 'now');
     $bulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
     return $dt->format('d') . ' ' . $bulan[(int)$dt->format('m')] . ' ' . $dt->format('Y');
 }
+
 function formatFullTime($timestamp)
 {
     return getIndonesianDate($timestamp) . ' ' . date('H:i', strtotime($timestamp)) . ' WIB';
 }
+
 class PDF extends FPDF
 {
     var $widths;
     var $aligns;
     var $tableHeaderCallback = null;
     var $isPrintingTable = false;
+
     function setPageBreakTrigger($val)
     {
         $this->PageBreakTrigger = $val;
     }
+
     function getPageBreakTrigger()
     {
         return $this->PageBreakTrigger;
     }
+
     function SetWidths($w)
     {
         $this->widths = $w;
     }
+
     function SetAligns($a)
     {
         $this->aligns = $a;
     }
+
     function SetTableHeaderCallback($callback)
     {
         $this->tableHeaderCallback = $callback;
     }
+
     function ImageRemote($url, $x, $y, $w, $h)
     {
         $tmpFile = sys_get_temp_dir() . '/qr_' . md5($url) . '.png';
@@ -83,6 +95,7 @@ class PDF extends FPDF
             $this->Cell($w, $h, 'QR Error', 0, 0, 'C');
         }
     }
+
     function Header()
     {
         $path = '../images/instansi/';
@@ -105,12 +118,14 @@ class PDF extends FPDF
         $this->Line(10, 40, 200, 40);
         $this->Ln(6);
     }
+
     function Footer()
     {
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 8);
         $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTsN 1 Pandeglang | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
     }
+
     function Row($data, $fill = false)
     {
         $nb = 0;
@@ -128,6 +143,7 @@ class PDF extends FPDF
         }
         $this->Ln($h);
     }
+
     function CheckPageBreak($h)
     {
         if ($this->GetY() + $h > $this->PageBreakTrigger) {
@@ -137,6 +153,7 @@ class PDF extends FPDF
             }
         }
     }
+
     function NbLines($w, $txt)
     {
         $cw = &$this->CurrentFont['cw'];
@@ -175,20 +192,24 @@ class PDF extends FPDF
         return $nl;
     }
 }
+
 try {
     $pdf = new PDF();
     $pdf->AliasNbPages();
     $pdf->SetMargins(10, 10, 10);
-    $pdf->SetAutoPageBreak(false); // Matikan auto page break
+    $pdf->SetAutoPageBreak(false);
     $pdf->setPageBreakTrigger(277);
     $pdf->AddPage();
+
     $m = str_pad($month, 2, '0', STR_PAD_LEFT);
     $y = $year;
-    $visits = $db->querySingle("SELECT value FROM global_stats WHERE key = 'site_visits'") ?: 0;
-    $feedbackCount = $db->querySingle("SELECT COUNT(*) FROM feedback WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y'") ?: 0;
-    $surveyCount = $db->querySingle("SELECT COUNT(*) FROM survey_responses WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y'") ?: 0;
-    $articleViews = $db->querySingle("SELECT SUM(views) FROM post_stats") ?: 0;
-    $indices = $db->querySingle("SELECT 
+
+    $visits = $pdo->query("SELECT value FROM global_stats WHERE `key` = 'site_visits'")->fetchColumn() ?: 0;
+    $feedbackCount = $pdo->query("SELECT COUNT(*) FROM feedback WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y")->fetchColumn() ?: 0;
+    $surveyCount = $pdo->query("SELECT COUNT(*) FROM survey_responses WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y")->fetchColumn() ?: 0;
+    $articleViews = $pdo->query("SELECT SUM(views) FROM post_stats")->fetchColumn() ?: 0;
+
+    $indices = $pdo->query("SELECT 
         AVG(score_zi) as zi, 
         AVG(score_service) as service, 
         AVG(score_academic) as academic,
@@ -196,20 +217,24 @@ try {
         AVG(score_management) as management,
         AVG(score_culture) as culture 
         FROM survey_responses 
-        WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y'", true);
+        WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y")->fetch();
+
     $idxZI = $indices ? round($indices['zi'] ?? 0, 2) : 0;
     $idxService = $indices ? round($indices['service'] ?? 0, 2) : 0;
     $idxAcademic = $indices ? round($indices['academic'] ?? 0, 2) : 0;
     $idxFacilities = $indices ? round($indices['facilities'] ?? 0, 2) : 0;
     $idxManagement = $indices ? round($indices['management'] ?? 0, 2) : 0;
     $idxCulture = $indices ? round($indices['culture'] ?? 0, 2) : 0;
+
     $ikmValue = 0;
     if ($surveyCount > 0) {
         $ikmValue = round(($idxZI + $idxService + $idxAcademic + $idxFacilities + $idxManagement + $idxCulture) / 6, 2);
     }
-    $avgRatingRaw = $db->querySingle("SELECT AVG(rating) FROM feedback WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y'");
+
+    $avgRatingRaw = $pdo->query("SELECT AVG(rating) FROM feedback WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y")->fetchColumn();
     $avgRatingVal = $avgRatingRaw ? round($avgRatingRaw, 2) : 0;
     $avgRatingText = ($avgRatingVal > 0) ? "$avgRatingVal / 5.00" : "-";
+
     function getPredikat($val)
     {
         if ($val >= 4.5) return "Sangat Baik (A)";
@@ -218,25 +243,31 @@ try {
         if ($val > 0) return "Kurang (D)";
         return "-";
     }
+
     $ikmText = ($ikmValue > 0) ? "$ikmValue / 5.00 (" . getPredikat($ikmValue) . ")" : "-";
+
     $pdf->SetFont('Arial', 'B', 12);
     $pdf->Cell(0, 6, 'LAPORAN REKAPITULASI PELAYANAN DIGITAL', 0, 1, 'C');
     $pdf->SetFont('Arial', '', 10);
     $pdf->Cell(0, 5, 'Periode Laporan: ' . $periodeText, 0, 1, 'C');
     $pdf->Ln(5);
+
     $startX = 10;
     $startY = $pdf->GetY();
     $rowH = 7;
     $wQR = 35;
     $wTable1 = 155;
+
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetFillColor(230, 230, 230);
     $pdf->Cell($wTable1, $rowH, ' I. RINGKASAN TRAFIK WEBSITE', 1, 0, 'L', true);
     $pdf->Cell($wQR, $rowH * 4, '', 1, 0, 'C');
+
     $qrContent = urlencode("MTSN1PDG|{$m}/{$y}|V:{$visits}|A:{$articleViews}|S:{$surveyCount}|F:{$feedbackCount}|IKM:{$ikmValue}");
     $qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data={$qrContent}&bgcolor=ffffff";
     $pdf->ImageRemote($qrUrl, ($startX + $wTable1) + 5.5, $startY + 2, 24, 24);
     $pdf->Ln($rowH);
+
     $wLabel = 65;
     $wValue = 90;
     $pdf->SetFont('Arial', '', 9);
@@ -248,11 +279,13 @@ try {
     $pdf->Cell($wLabel, $rowH, ' Total Artikel Dibaca', 1, 0, 'L', true);
     $pdf->Cell($wValue, $rowH, '  ' . number_format($articleViews) . ' Kali Dibaca', 1, 1, 'L');
     $pdf->Ln(5);
+
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetFillColor(230, 230, 230);
     $pdf->Cell(190, $rowH, ' II. KUALITAS PELAYANAN & PARTISIPASI PUBLIK', 1, 1, 'L', true);
     $pdf->SetFont('Arial', '', 9);
     $pdf->SetFillColor(250, 250, 250);
+
     $wLabelFull = 70;
     $wValueFull = 120;
     $pdf->Cell($wLabelFull, $rowH, ' Jumlah Ulasan Masuk', 1, 0, 'L', true);
@@ -261,18 +294,21 @@ try {
     $pdf->Cell($wValueFull, $rowH, ' ' . $avgRatingText, 1, 1, 'L');
     $pdf->Cell($wLabelFull, $rowH, ' Jumlah Responden Survei', 1, 0, 'L', true);
     $pdf->Cell($wValueFull, $rowH, ' ' . number_format($surveyCount) . ' Orang', 1, 1, 'L');
-    $wSub = 190 / 3; // Bagi 3 kolom
+
+    $wSub = 190 / 3;
     $pdf->Cell($wSub, $rowH, ' Indeks ZI: ' . ($idxZI > 0 ? $idxZI : '-'), 1, 0, 'C', true);
     $pdf->Cell($wSub, $rowH, ' Indeks Layanan: ' . ($idxService > 0 ? $idxService : '-'), 1, 0, 'C', true);
     $pdf->Cell($wSub, $rowH, ' Indeks Akademik: ' . ($idxAcademic > 0 ? $idxAcademic : '-'), 1, 1, 'C', true);
     $pdf->Cell($wSub, $rowH, ' Indeks Sarpras: ' . ($idxFacilities > 0 ? $idxFacilities : '-'), 1, 0, 'C', true);
     $pdf->Cell($wSub, $rowH, ' Indeks Manajemen: ' . ($idxManagement > 0 ? $idxManagement : '-'), 1, 0, 'C', true);
     $pdf->Cell($wSub, $rowH, ' Indeks Budaya: ' . ($idxCulture > 0 ? $idxCulture : '-'), 1, 1, 'C', true);
+
     $pdf->SetFont('Arial', 'B', 9);
     $pdf->SetFillColor(240, 240, 240);
     $pdf->Cell($wLabelFull, $rowH, ' Indeks Kepuasan Masy. (IKM)', 1, 0, 'L', true);
     $pdf->Cell($wValueFull, $rowH, ' ' . $ikmText, 1, 1, 'L', true);
     $pdf->Ln(5);
+
     $drawSurveyHeader = function () use ($pdf) {
         $pdf->SetFont('Arial', 'B', 8);
         $pdf->SetFillColor(0, 150, 100);
@@ -289,8 +325,9 @@ try {
         $pdf->Cell(10, 7, 'IDX', 1, 0, 'C', true);
         $pdf->Cell(53, 7, 'Masukan', 1, 1, 'L', true);
         $pdf->SetTextColor(0);
-        $pdf->SetFont('Arial', '', 7); // Font lebih kecil agar muat
+        $pdf->SetFont('Arial', '', 7);
     };
+
     $pdf->SetFont('Arial', 'B', 10);
     $pdf->Cell(0, 7, 'A. DATA DETAIL SURVEI KEPUASAN', 0, 1, 'L');
     $pdf->SetWidths([8, 30, 35, 9, 9, 9, 9, 9, 9, 10, 53]);
@@ -298,10 +335,11 @@ try {
     $drawSurveyHeader();
     $pdf->SetTableHeaderCallback($drawSurveyHeader);
     $pdf->isPrintingTable = true;
-    $resSurv = $db->query("SELECT * FROM survey_responses WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y' ORDER BY created_at ASC");
+
+    $resSurv = $pdo->query("SELECT * FROM survey_responses WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y ORDER BY created_at ASC");
     $no = 1;
     $found1 = false;
-    while ($row = $resSurv->fetchArray(SQLITE3_ASSOC)) {
+    while ($row = $resSurv->fetch()) {
         $found1 = true;
         $idxIndividual = round(
             ($row['score_zi'] + $row['score_service'] + $row['score_academic'] +
@@ -325,6 +363,7 @@ try {
     $pdf->isPrintingTable = false;
     if (!$found1) $pdf->Cell(190, 8, 'Tidak ada data pada periode ini.', 1, 1, 'C');
     $pdf->Ln(6);
+
     $drawFeedbackHeader = function () use ($pdf) {
         $pdf->SetFont('Arial', 'B', 8);
         $pdf->SetFillColor(255, 193, 7);
@@ -336,6 +375,7 @@ try {
         $pdf->Cell(82, 7, 'Pesan', 1, 1, 'L', true);
         $pdf->SetFont('Arial', '', 8);
     };
+
     $pdf->SetFont('Arial', 'B', 10);
     if ($pdf->GetY() + 15 > $pdf->getPageBreakTrigger()) $pdf->AddPage();
     $pdf->Cell(0, 7, 'B. DATA DETAIL ULASAN MASUK', 0, 1, 'L');
@@ -344,58 +384,70 @@ try {
     $drawFeedbackHeader();
     $pdf->SetTableHeaderCallback($drawFeedbackHeader);
     $pdf->isPrintingTable = true;
-    $resFeed = $db->query("SELECT * FROM feedback WHERE strftime('%m', created_at) = '$m' AND strftime('%Y', created_at) = '$y' ORDER BY created_at ASC");
+
+    $resFeed = $pdo->query("SELECT * FROM feedback WHERE MONTH(created_at) = $m AND YEAR(created_at) = $y ORDER BY created_at ASC");
     $no = 1;
     $found2 = false;
-    while ($row = $resFeed->fetchArray(SQLITE3_ASSOC)) {
+    while ($row = $resFeed->fetch()) {
         $found2 = true;
         $pdf->Row([$no++, formatFullTime($row['created_at']), $row['name'] ?: 'Anonim', $row['rating'] . ' / 5', $row['message'] ?: '-']);
     }
     $pdf->isPrintingTable = false;
     if (!$found2) $pdf->Cell(190, 8, 'Tidak ada data pada periode ini.', 1, 1, 'C');
     $pdf->Ln(8);
+
     $signatureBlockHeight = 80;
     if ($pdf->GetY() + $signatureBlockHeight > $pdf->getPageBreakTrigger()) {
         $pdf->AddPage();
     }
+
     $path = '../images/instansi/';
     $tglCetak = getIndonesianDate();
     $qrSize = 18;
     $yStart = $pdf->GetY();
+
     $pdf->SetXY(120, $yStart);
     $pdf->SetFont('Arial', '', 11);
     $pdf->Cell(70, 5, 'Pandeglang, ' . $tglCetak, 0, 1, 'C');
     $pdf->Ln(5);
+
     $yJabatan = $pdf->GetY();
     $pdf->SetXY(20, $yJabatan);
     $pdf->Cell(70, 5, 'Kepala Tata Usaha,', 0, 0, 'C');
     $pdf->SetXY(120, $yJabatan);
     $pdf->Cell(70, 5, 'Koordinator Tim Pusdatin,', 0, 1, 'C');
+
     $yImage = $pdf->GetY() + 1;
     if (file_exists($path . 'tte-kepala-tata-usaha.png')) $pdf->Image($path . 'tte-kepala-tata-usaha.png', 46, $yImage, $qrSize);
     if (file_exists($path . 'tte-koordinator-tim-pusdatin.png')) $pdf->Image($path . 'tte-koordinator-tim-pusdatin.png', 146, $yImage, $qrSize);
+
     $pdf->SetY($yImage + 19);
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->SetX(20);
     $pdf->Cell(70, 5, "UMAR MU'TAMAR, S.Ag.", 0, 0, 'C');
     $pdf->SetX(120);
     $pdf->Cell(70, 5, 'YAHYA ZULFIKRI', 0, 1, 'C');
+
     $pdf->SetFont('Arial', '', 10);
     $pdf->SetX(20);
     $pdf->Cell(70, 4, 'NIP. 196903061998031004', 0, 0, 'C');
     $pdf->SetX(120);
     $pdf->Cell(70, 4, 'NIP. 200001142025211016', 0, 1, 'C');
     $pdf->Ln(8);
+
     $pdf->SetFont('Arial', '', 11);
     $pdf->Cell(0, 5, 'Mengetahui,', 0, 1, 'C');
     $pdf->Cell(0, 5, 'Kepala Madrasah,', 0, 1, 'C');
+
     $yImageKamad = $pdf->GetY() + 1;
     if (file_exists($path . 'tte-kepala-madrasah.png')) $pdf->Image($path . 'tte-kepala-madrasah.png', 96, $yImageKamad, $qrSize);
+
     $pdf->SetY($yImageKamad + 19);
     $pdf->SetFont('Arial', 'B', 11);
     $pdf->Cell(0, 5, 'H. EMAN SULAIMAN, S.Ag., M.Pd.', 0, 1, 'C');
     $pdf->SetFont('Arial', '', 10);
     $pdf->Cell(0, 4, 'NIP. 197006032000031002', 0, 1, 'C');
+
     $pdf->Output('I', 'Laporan_Statistik_Website_' . $month . '_' . $year . '.pdf');
 } catch (Exception $e) {
     die("PDF Error: " . $e->getMessage());
