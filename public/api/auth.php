@@ -3,56 +3,55 @@ session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST, GET');
+require_once __DIR__ . '/config.php';
+
 $ADMIN_EMAIL_ENV = getenv('ADMIN_EMAIL') ?: 'dev.mtsn1pandeglang@gmail.com';
-$dbPath = __DIR__ . '/../../database.db';
+
 try {
-    $db = new SQLite3($dbPath);
-    $db->exec("CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
-        name TEXT,
-        picture TEXT,
-        role TEXT DEFAULT 'user', -- super_admin, operator, user
-        status TEXT DEFAULT 'active', -- active, inactive
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
-    $stmt = $db->prepare("SELECT id FROM users WHERE email = :email");
-    $stmt->bindValue(':email', $ADMIN_EMAIL_ENV, SQLITE3_TEXT);
-    if (!$stmt->execute()->fetchArray()) {
-        $ins = $db->prepare("INSERT INTO users (email, name, role, status) VALUES (:email, 'Super Admin', 'super_admin', 'active')");
-        $ins->bindValue(':email', $ADMIN_EMAIL_ENV, SQLITE3_TEXT);
-        $ins->execute();
+    $pdo = getDBConnection();
+    initializeTables($pdo);
+
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+    $stmt->execute([':email' => $ADMIN_EMAIL_ENV]);
+    if (!$stmt->fetch()) {
+        $ins = $pdo->prepare("INSERT INTO users (email, name, role, status) VALUES (:email, 'Super Admin', 'super_admin', 'active')");
+        $ins->execute([':email' => $ADMIN_EMAIL_ENV]);
     }
+
     $action = $_GET['action'] ?? '';
+
     if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $json = file_get_contents('php://input');
         $data = json_decode($json, true);
         $id_token = $data['credential'] ?? '';
         if (!$id_token) throw new Exception('Token tidak ditemukan');
+
         $url = "https://oauth2.googleapis.com/tokeninfo?id_token=" . $id_token;
         $response = @file_get_contents($url);
         if (!$response) throw new Exception('Gagal koneksi ke Google.');
+
         $payload = json_decode($response, true);
         if (isset($payload['email']) && $payload['email_verified'] == 'true') {
             $email = $payload['email'];
-            $stmt = $db->prepare("SELECT * FROM users WHERE email = :email");
-            $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-            $user = $stmt->execute()->fetchArray(SQLITE3_ASSOC);
+            $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :email");
+            $stmt->execute([':email' => $email]);
+            $user = $stmt->fetch();
+
             if ($user) {
-                $upd = $db->prepare("UPDATE users SET name = :name, picture = :pic WHERE id = :id");
-                $upd->bindValue(':name', $payload['name'], SQLITE3_TEXT);
-                $upd->bindValue(':pic', $payload['picture'], SQLITE3_TEXT);
-                $upd->bindValue(':id', $user['id'], SQLITE3_INTEGER);
-                $upd->execute();
+                $upd = $pdo->prepare("UPDATE users SET name = :name, picture = :pic WHERE id = :id");
+                $upd->execute([':name' => $payload['name'], ':pic' => $payload['picture'], ':id' => $user['id']]);
+
                 if ($user['status'] === 'inactive') {
                     throw new Exception('Akun Anda dinonaktifkan. Hubungi Administrator.');
                 }
+
                 $_SESSION['admin_logged_in'] = true;
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_email'] = $user['email'];
                 $_SESSION['user_name'] = $payload['name'];
                 $_SESSION['user_picture'] = $payload['picture'];
                 $_SESSION['user_role'] = $user['role'];
+
                 echo json_encode([
                     'status' => 'success',
                     'user' => [
@@ -73,46 +72,46 @@ try {
         $data = json_decode($json, true);
         $id_token = $data['credential'] ?? '';
         if (!$id_token) throw new Exception('Token tidak ditemukan');
+
         $url = "https://oauth2.googleapis.com/tokeninfo?id_token=" . $id_token;
         $response = @file_get_contents($url);
         $payload = json_decode($response, true);
         if (!isset($payload['email'])) throw new Exception('Token Invalid');
+
         $email = $payload['email'];
         $name = $payload['name'];
         $picture = $payload['picture'];
-        $cek = $db->prepare("SELECT id FROM users WHERE email = :email");
-        $cek->bindValue(':email', $email, SQLITE3_TEXT);
-        if ($cek->execute()->fetchArray()) {
+
+        $cek = $pdo->prepare("SELECT id FROM users WHERE email = :email");
+        $cek->execute([':email' => $email]);
+        if ($cek->fetch()) {
             throw new Exception("Email sudah terdaftar. Silakan login.");
         }
-        $stmt = $db->prepare("INSERT INTO users (email, name, picture, role, status) VALUES (:email, :name, :pic, 'user', 'active')");
-        $stmt->bindValue(':email', $email, SQLITE3_TEXT);
-        $stmt->bindValue(':name', $name, SQLITE3_TEXT);
-        $stmt->bindValue(':pic', $picture, SQLITE3_TEXT);
-        if ($stmt->execute()) {
-            $newId = $db->lastInsertRowID();
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['user_id'] = $newId;
-            $_SESSION['user_email'] = $email;
-            $_SESSION['user_name'] = $name;
-            $_SESSION['user_picture'] = $picture;
-            $_SESSION['user_role'] = 'user'; // Default Role
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Registrasi berhasil! Selamat datang.',
-                'user' => [
-                    'name' => $name,
-                    'email' => $email,
-                    'picture' => $picture,
-                    'role' => 'user'
-                ]
-            ]);
-        } else {
-            throw new Exception('Gagal mendaftar.');
-        }
+
+        $stmt = $pdo->prepare("INSERT INTO users (email, name, picture, role, status) VALUES (:email, :name, :pic, 'user', 'active')");
+        $stmt->execute([':email' => $email, ':name' => $name, ':pic' => $picture]);
+        $newId = $pdo->lastInsertId();
+
+        $_SESSION['admin_logged_in'] = true;
+        $_SESSION['user_id'] = $newId;
+        $_SESSION['user_email'] = $email;
+        $_SESSION['user_name'] = $name;
+        $_SESSION['user_picture'] = $picture;
+        $_SESSION['user_role'] = 'user';
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Registrasi berhasil! Selamat datang.',
+            'user' => [
+                'name' => $name,
+                'email' => $email,
+                'picture' => $picture,
+                'role' => 'user'
+            ]
+        ]);
     } elseif ($action === 'check') {
         if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-            $role = isset($_SESSION['user_role']) ? $_SESSION['user_role'] : 'user';
+            $role = $_SESSION['user_role'] ?? 'user';
             echo json_encode([
                 'status' => 'authenticated',
                 'user' => [
