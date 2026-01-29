@@ -1,32 +1,22 @@
 <?php
 session_start();
 header('Content-Type: application/json');
+require_once __DIR__ . '/config.php';
 
-// Cek Login & Role Super Admin
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['user_role'] !== 'super_admin') {
     http_response_code(403);
     echo json_encode(['status' => 'error', 'message' => 'Akses Ditolak: Hanya Super Admin yang bisa menghapus data.']);
     exit;
 }
 
-$dbPath = __DIR__ . '/../../database.db';
-
 try {
-    if (!class_exists('SQLite3')) {
-        throw new Exception("SQLite3 driver not installed.");
-    }
-
-    $db = new SQLite3($dbPath);
-
+    $pdo = getDBConnection();
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
-
     $action = $_GET['action'] ?? '';
 
     if ($action === 'delete') {
         $type = $data['type'] ?? '';
-
-        // UPDATE: Mendukung single ID atau multiple IDs
         $ids = [];
         if (isset($data['ids']) && is_array($data['ids'])) {
             $ids = $data['ids'];
@@ -36,7 +26,6 @@ try {
 
         if (empty($ids)) throw new Exception("Tidak ada data yang dipilih.");
 
-        // Validasi Tipe Tabel
         $table = '';
         if ($type === 'feedback') {
             $table = 'feedback';
@@ -46,20 +35,15 @@ try {
             throw new Exception("Tipe data tidak dikenal.");
         }
 
-        // Sanitasi ID menjadi integer semua
         $sanitized_ids = array_map('intval', $ids);
-        $ids_string = implode(',', $sanitized_ids);
+        $placeholders = implode(',', array_fill(0, count($sanitized_ids), '?'));
+        $query = "DELETE FROM $table WHERE id IN ($placeholders)";
 
-        // Eksekusi Bulk Delete
-        // Query: DELETE FROM table WHERE id IN (1, 2, 3)
-        $query = "DELETE FROM $table WHERE id IN ($ids_string)";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute($sanitized_ids);
+        $count = $stmt->rowCount();
 
-        if ($db->exec($query)) {
-            $count = $db->changes();
-            echo json_encode(['status' => 'success', 'message' => "$count data berhasil dihapus."]);
-        } else {
-            throw new Exception("Gagal menghapus data.");
-        }
+        echo json_encode(['status' => 'success', 'message' => "$count data berhasil dihapus."]);
     } else {
         throw new Exception("Action tidak valid.");
     }
