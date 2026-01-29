@@ -2,8 +2,7 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST');
-
-$dbPath = __DIR__ . '/../../database.db';
+require_once __DIR__ . '/config.php';
 
 function getClientIP()
 {
@@ -13,49 +12,13 @@ function getClientIP()
 }
 
 try {
-    if (!class_exists('SQLite3')) {
-        throw new Exception("SQLite3 driver not installed.");
-    }
-
-    $db = new SQLite3($dbPath);
+    $pdo = getDBConnection();
+    initializeTables($pdo);
     $ip_address = getClientIP();
 
-    // 1. AUTO MIGRATION: Cek & Tambah Kolom jika belum ada
-    $db->exec("CREATE TABLE IF NOT EXISTS survey_responses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        respondent_name TEXT,
-        respondent_role TEXT,
-        feedback TEXT,
-        details_json TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
-
-    $requiredCols = [
-        'score_zi' => 'REAL',
-        'score_service' => 'REAL',
-        'score_academic' => 'REAL',
-        'score_facilities' => 'REAL',
-        'score_management' => 'REAL',
-        'score_culture' => 'REAL',
-        'ip_address' => 'TEXT'
-    ];
-
-    $existingCols = [];
-    $resCols = $db->query("PRAGMA table_info(survey_responses)");
-    while ($row = $resCols->fetchArray(SQLITE3_ASSOC)) {
-        $existingCols[] = $row['name'];
-    }
-
-    foreach ($requiredCols as $col => $type) {
-        if (!in_array($col, $existingCols)) {
-            $db->exec("ALTER TABLE survey_responses ADD COLUMN $col $type DEFAULT 0");
-        }
-    }
-
-    // Helper Stats (Updated for 6 categories)
-    function getSurveyStats($db)
+    function getSurveyStats($pdo)
     {
-        $sql = "SELECT
+        $stmt = $pdo->query("SELECT
             AVG(score_zi) as zi,
             AVG(score_service) as service,
             AVG(score_academic) as academic,
@@ -63,8 +26,8 @@ try {
             AVG(score_management) as management,
             AVG(score_culture) as culture,
             COUNT(*) as total
-            FROM survey_responses";
-        $row = $db->querySingle($sql, true);
+            FROM survey_responses");
+        $row = $stmt->fetch();
 
         return [
             'zi' => round($row['zi'] ?? 0, 2),
@@ -77,11 +40,10 @@ try {
         ];
     }
 
-    // 2. Handle POST
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $checkIp = $db->prepare("SELECT id FROM survey_responses WHERE ip_address = :ip");
-        $checkIp->bindValue(':ip', $ip_address, SQLITE3_TEXT);
-        if ($checkIp->execute()->fetchArray()) {
+        $checkIp = $pdo->prepare("SELECT id FROM survey_responses WHERE ip_address = :ip");
+        $checkIp->execute([':ip' => $ip_address]);
+        if ($checkIp->fetch()) {
             echo json_encode(['status' => 'error', 'message' => 'Anda sudah mengisi survei ini.']);
             exit;
         }
@@ -98,34 +60,30 @@ try {
         $s = $data['scores'] ?? [];
         $details = json_encode($data['answers']);
 
-        $stmt = $db->prepare("INSERT INTO survey_responses
+        $stmt = $pdo->prepare("INSERT INTO survey_responses
             (respondent_name, respondent_role, score_zi, score_service, score_academic, score_facilities, score_management, score_culture, feedback, details_json, ip_address)
             VALUES (:name, :role, :zi, :service, :acd, :fac, :mgt, :cul, :feedback, :details, :ip)");
 
-        $stmt->bindValue(':name', $name, SQLITE3_TEXT);
-        $stmt->bindValue(':role', $role, SQLITE3_TEXT);
-        $stmt->bindValue(':zi', $s['zi'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':service', $s['service'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':acd', $s['academic'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':fac', $s['facilities'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':mgt', $s['management'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':cul', $s['culture'] ?? 0, SQLITE3_FLOAT);
-        $stmt->bindValue(':feedback', $feedback, SQLITE3_TEXT);
-        $stmt->bindValue(':details', $details, SQLITE3_TEXT);
-        $stmt->bindValue(':ip', $ip_address, SQLITE3_TEXT);
+        $stmt->execute([
+            ':name' => $name,
+            ':role' => $role,
+            ':zi' => $s['zi'] ?? 0,
+            ':service' => $s['service'] ?? 0,
+            ':acd' => $s['academic'] ?? 0,
+            ':fac' => $s['facilities'] ?? 0,
+            ':mgt' => $s['management'] ?? 0,
+            ':cul' => $s['culture'] ?? 0,
+            ':feedback' => $feedback,
+            ':details' => $details,
+            ':ip' => $ip_address
+        ]);
 
-        if ($stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => 'Survei berhasil dikirim.', 'stats' => getSurveyStats($db)]);
-        } else {
-            throw new Exception("Gagal menyimpan data.");
-        }
-    }
-    // 3. Handle GET
-    else {
-        $checkIp = $db->prepare("SELECT id FROM survey_responses WHERE ip_address = :ip");
-        $checkIp->bindValue(':ip', $ip_address, SQLITE3_TEXT);
-        $hasSubmitted = ($checkIp->execute()->fetchArray()) ? true : false;
-        echo json_encode(['status' => 'ready', 'has_submitted' => $hasSubmitted, 'stats' => getSurveyStats($db)]);
+        echo json_encode(['status' => 'success', 'message' => 'Survei berhasil dikirim.', 'stats' => getSurveyStats($pdo)]);
+    } else {
+        $checkIp = $pdo->prepare("SELECT id FROM survey_responses WHERE ip_address = :ip");
+        $checkIp->execute([':ip' => $ip_address]);
+        $hasSubmitted = $checkIp->fetch() ? true : false;
+        echo json_encode(['status' => 'ready', 'has_submitted' => $hasSubmitted, 'stats' => getSurveyStats($pdo)]);
     }
 } catch (Exception $e) {
     http_response_code(500);
