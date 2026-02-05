@@ -80,6 +80,7 @@ function initializeTables($pdo)
     $stmt = $pdo->prepare("INSERT IGNORE INTO global_stats (`key`, value) VALUES ('site_visits', 0)");
     $stmt->execute();
 }
+
 function initializeComplaintsTables($pdo)
 {
     // Tabel untuk pengaduan
