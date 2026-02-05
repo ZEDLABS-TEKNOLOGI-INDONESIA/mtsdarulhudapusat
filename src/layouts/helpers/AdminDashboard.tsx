@@ -1,1654 +1,2600 @@
-import { useState, useEffect } from 'react';
-import { Line, Pie, Bar } from 'react-chartjs-2';
+import React, { useEffect, useState, useMemo, useRef } from "react";
+import {
+  FaDownload,
+  FaSignOutAlt,
+  FaEye,
+  FaStar,
+  FaChartLine,
+  FaPoll,
+  FaSort,
+  FaSortUp,
+  FaSortDown,
+  FaSearch,
+  FaChevronLeft,
+  FaChevronRight,
+  FaExclamationTriangle,
+  FaTimes,
+  FaExternalLinkAlt,
+  FaQuoteLeft,
+  FaTrash,
+  FaExclamationCircle,
+  FaFileUpload,
+  FaFileCsv,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaSpinner,
+  FaHistory,
+  FaDesktop,
+  FaFilter,
+  FaCalendarAlt,
+  FaUserEdit,
+  FaFileAlt,
+  FaImages,
+  FaVideo,
+  FaSyncAlt,
+  FaCloudUploadAlt,
+  FaHammer,
+  FaSearchPlus,
+} from "react-icons/fa";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  ArcElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
-} from 'chart.js';
+  Filler,
+} from "chart.js";
+import { Bar, Pie, Line } from "react-chartjs-2";
 
 ChartJS.register(
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
-  ArcElement,
   BarElement,
+  ArcElement,
   Title,
   Tooltip,
-  Legend
+  Legend,
+  Filler,
 );
 
+// --- HELPER & INTERFACES ---
 interface User {
-  email: string;
   name: string;
+  email: string;
   picture: string;
   role: string;
-  status: string;
 }
 
-interface Pengaduan {
+interface UserManagementData {
   id: number;
-  nama: string;
   email: string;
-  telepon: string;
-  kategori: string;
-  judul: string;
-  isi_pengaduan: string;
+  name: string;
+  role: string;
   status: string;
-  tanggapan: string | null;
-  ip_address: string;
   created_at: string;
-  updated_at: string;
 }
 
-interface PengaduanStats {
-  total: number;
-  menunggu: number;
-  diproses: number;
-  selesai: number;
-  ditolak: number;
-}
+// FORMAT TANGGAL
+const formatDateIndo = (dateString: string) => {
+  if (!dateString) return "-";
+  try {
+    const date = new Date(
+      dateString.includes("Z")
+        ? dateString
+        : dateString.replace(" ", "T") + "Z",
+    );
+    return new Intl.DateTimeFormat("id-ID", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "Asia/Jakarta",
+      timeZoneName: "short",
+    })
+      .format(date)
+      .replace("pukul", "");
+  } catch (e) {
+    return dateString;
+  }
+};
+
+const getMonthFromDate = (dateString: string) => {
+  try {
+    return (
+      new Date(
+        dateString.includes("Z")
+          ? dateString
+          : dateString.replace(" ", "T") + "Z",
+      ).getMonth() + 1
+    );
+  } catch (e) {
+    return 0;
+  }
+};
+
+const getYearFromDate = (dateString: string) => {
+  try {
+    return new Date(
+      dateString.includes("Z")
+        ? dateString
+        : dateString.replace(" ", "T") + "Z",
+    ).getFullYear();
+  } catch (e) {
+    return 0;
+  }
+};
 
 const AdminDashboard = () => {
+  // --- STATE UTAMA ---
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  
-  // Stats states
-  const [stats, setStats] = useState<any>(null);
-  const [activityData, setActivityData] = useState<any>(null);
-  const [visitsData, setVisitsData] = useState<any>(null);
-  const [ratingData, setRatingData] = useState<any>(null);
-  const [surveyData, setSurveyData] = useState<any>(null);
-  const [surveyAvgData, setSurveyAvgData] = useState<any>(null);
-  
-  // Feedback states
-  const [feedbacks, setFeedbacks] = useState<any[]>([]);
-  const [feedbackFilter, setFeedbackFilter] = useState({ month: '', year: '', rating: '' });
-  
-  // Survey states
-  const [surveys, setSurveys] = useState<any[]>([]);
-  const [surveyFilter, setSurveyFilter] = useState({ month: '', year: '', category: '' });
-  
-  // Visits states
-  const [visits, setVisits] = useState<any[]>([]);
-  const [visitsFilter, setVisitsFilter] = useState({ month: '', year: '' });
-  
-  // Posts states
-  const [posts, setPosts] = useState<any[]>([]);
-  const [postsFilter, setPostsFilter] = useState({ month: '', year: '' });
-  
-  // Pengaduan states
-  const [pengaduans, setPengaduans] = useState<Pengaduan[]>([]);
-  const [pengaduanStats, setPengaduanStats] = useState<PengaduanStats | null>(null);
-  const [pengaduanFilter, setPengaduanFilter] = useState({ month: '', year: '', status: '', kategori: '' });
-  const [selectedPengaduan, setSelectedPengaduan] = useState<Pengaduan | null>(null);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [editForm, setEditForm] = useState({ status: '', tanggapan: '' });
-  
-  // Users states
-  const [users, setUsers] = useState<any[]>([]);
-  const [editingUser, setEditingUser] = useState<any>(null);
-  const [userFormData, setUserFormData] = useState({ email: '', name: '', role: 'user', status: 'active' });
-  
-  // Content states
-  const [artikelFiles, setArtikelFiles] = useState<any[]>([]);
-  const [gambarFiles, setGambarFiles] = useState<any[]>([]);
-  const [videoFiles, setVideoFiles] = useState<any[]>([]);
-  const [uploadType, setUploadType] = useState<'artikel' | 'gambar' | 'video'>('artikel');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
-  
-  // Import modal states
+  const [data, setData] = useState<any>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
+
+  // --- STATE USER MANAGEMENT ---
+  const [userList, setUserList] = useState<UserManagementData[]>([]);
+  const [editUserModal, setEditUserModal] = useState<{
+    isOpen: boolean;
+    user: UserManagementData | null;
+  }>({ isOpen: false, user: null });
+
+  // --- STATE FILTER ULASAN ---
+  const [fbFilterMonth, setFbFilterMonth] = useState<number>(0);
+  const [fbFilterYear, setFbFilterYear] = useState<number>(0);
+  const [fbFilterRating, setFbFilterRating] = useState<number>(0);
+
+  // --- STATE FILTER SURVEI ---
+  const [svFilterMonth, setSvFilterMonth] = useState<number>(0);
+  const [svFilterYear, setSvFilterYear] = useState<number>(0);
+  const [svFilterCategory, setSvFilterCategory] = useState<string>("all");
+  const [svFilterScore, setSvFilterScore] = useState<number>(0);
+
+  // --- STATE MODALS ---
+  const [selectedItem, setSelectedItem] = useState<any | null>(null);
+  const [modalType, setModalType] = useState<"feedback" | "survey" | null>(
+    null,
+  );
+
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    ids: number[];
+    type: string;
+    count: number;
+    action?: () => void;
+  }>({ isOpen: false, ids: [], type: "feedback", count: 0 });
+
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    status: "success" | "error";
+    title: string;
+    message: string;
+  }>({ isOpen: false, status: "success", title: "", message: "" });
+
   const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importType, setImportType] = useState<'feedback' | 'survey' | 'visits' | 'pengaduan'>('feedback');
-  const [importFile, setImportFile] = useState<File | null>(null);
-  const [importing, setImporting] = useState(false);
+
+  // --- STATE CONTENT MANAGER ---
+  const [contentTab, setContentTab] = useState<"article" | "image" | "video">(
+    "article",
+  );
+  const [fileList, setFileList] = useState<any[]>([]);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [uploadConflict, setUploadConflict] = useState<{
+    isOpen: boolean;
+    file: File | null;
+    type: string;
+  }>({ isOpen: false, file: null, type: "" });
+  const [isRebuilding, setIsRebuilding] = useState(false);
+
+  // State Filter Header (PDF)
+  const [selectedMonth, setSelectedMonth] = useState(
+    () => new Date().getMonth() + 1,
+  );
+  const [selectedYear, setSelectedYear] = useState(() =>
+    new Date().getFullYear(),
+  );
+
+  // --- LOGIKA FILTER DATA ---
+  const filteredFeedbacks = useMemo(() => {
+    if (!data?.tables?.feedbacks) return [];
+    return data.tables.feedbacks.filter((item: any) => {
+      const matchMonth =
+        fbFilterMonth === 0 ||
+        getMonthFromDate(item.created_at) === fbFilterMonth;
+      const matchYear =
+        fbFilterYear === 0 || getYearFromDate(item.created_at) === fbFilterYear;
+      const matchRating =
+        fbFilterRating === 0 || item.rating === fbFilterRating;
+      return matchMonth && matchYear && matchRating;
+    });
+  }, [data, fbFilterMonth, fbFilterYear, fbFilterRating]);
+
+  const filteredSurveys = useMemo(() => {
+    if (!data?.tables?.surveys) return [];
+    return data.tables.surveys.filter((item: any) => {
+      const matchMonth =
+        svFilterMonth === 0 ||
+        getMonthFromDate(item.created_at) === svFilterMonth;
+      const matchYear =
+        svFilterYear === 0 || getYearFromDate(item.created_at) === svFilterYear;
+
+      let matchScore = true;
+      if (svFilterScore > 0) {
+        // Dinamis check score
+        const cats = [
+          "score_zi",
+          "score_service",
+          "score_academic",
+          "score_facilities",
+          "score_management",
+          "score_culture",
+        ];
+        if (svFilterCategory === "all") {
+          matchScore = cats.some(
+            (c) => Math.round(item[c] || 0) === svFilterScore,
+          );
+        } else {
+          matchScore =
+            Math.round(item[`score_${svFilterCategory}`] || 0) ===
+            svFilterScore;
+        }
+      }
+      return matchMonth && matchYear && matchScore;
+    });
+  }, [data, svFilterMonth, svFilterYear, svFilterCategory, svFilterScore]);
+
+  const filteredVisits = useMemo(() => {
+    if (!data?.tables?.visits) return [];
+    return data.tables.visits.filter((item: any) => {
+      const matchMonth =
+        fbFilterMonth === 0 ||
+        getMonthFromDate(item.created_at) === fbFilterMonth;
+      const matchYear =
+        fbFilterYear === 0 || getYearFromDate(item.created_at) === fbFilterYear;
+      return matchMonth && matchYear;
+    });
+  }, [data, fbFilterMonth, fbFilterYear]);
+
+  // Data Grafik Kunjungan
+  const visitsChartData = useMemo(() => {
+    if (!data?.tables?.visits) return { labels: [], datasets: [] };
+    const visitsByDate: Record<string, number> = {};
+    data.tables.visits.forEach((visit: any) => {
+      const date = new Date(visit.created_at.replace(" ", "T"))
+        .toISOString()
+        .split("T")[0];
+      visitsByDate[date] = (visitsByDate[date] || 0) + 1;
+    });
+    const sortedDates = Object.keys(visitsByDate).sort();
+    return {
+      labels: sortedDates.map((d) => {
+        const [y, m, day] = d.split("-");
+        return `${day}/${m}`;
+      }),
+      datasets: [
+        {
+          label: "Jumlah Kunjungan",
+          data: sortedDates.map((d) => visitsByDate[d]),
+          borderColor: "#3b82f6",
+          backgroundColor: "rgba(59, 130, 246, 0.1)",
+          fill: true,
+          tension: 0.4,
+        },
+      ],
+    };
+  }, [data]);
+
+  // --- AUTH & INIT ---
+  const initializeGoogleButton = () => {
+    const btnContainer = document.getElementById("googleBtn");
+    if (!btnContainer) return;
+    /* @ts-ignore */
+    if (window.google && window.google.accounts) {
+      /* @ts-ignore */
+      window.google.accounts.id.initialize({
+        client_id: import.meta.env.PUBLIC_GOOGLE_CLIENT_ID,
+        callback: handleAuthResponse,
+        auto_select: false,
+        ui_mode: "popup",
+      });
+      renderGoogleBtn();
+    }
+  };
+
+  const renderGoogleBtn = () => {
+    const btn = document.getElementById("googleBtn");
+    if (btn)
+      /* @ts-ignore */ window.google?.accounts.id.renderButton(btn, {
+        theme: "outline",
+        size: "large",
+        width: 250,
+        text: isRegisterMode ? "signup_with" : "signin_with",
+      });
+  };
 
   useEffect(() => {
-    checkAuth();
+    if (!user && !loading) renderGoogleBtn();
+  }, [isRegisterMode, user, loading]);
+
+  const handleAuthResponse = async (response: any) => {
+    setLoading(true);
+    if (!isRegisterMode) {
+      try {
+        const res = await fetch("/api/auth.php?action=login", {
+          method: "POST",
+          body: JSON.stringify({ credential: response.credential }),
+        });
+        const result = await res.json();
+
+        if (result.status === "success") {
+          setUser(result.user);
+          fetchStats();
+          if (result.user.role === "super_admin") fetchUsers();
+        } else if (result.status === "unregistered") {
+          if (
+            window.confirm(
+              "Email ini belum terdaftar. Apakah Anda ingin mendaftar sekarang sebagai User baru?",
+            )
+          ) {
+            await doRegister(response.credential);
+          } else {
+            alert("Login dibatalkan.");
+          }
+        } else {
+          alert(result.message);
+        }
+      } catch (e) {
+        alert("Gagal menghubungi server login.");
+      }
+    } else {
+      await doRegister(response.credential);
+    }
+    setLoading(false);
+  };
+
+  const doRegister = async (credential: string) => {
+    try {
+      const res = await fetch("/api/auth.php?action=register", {
+        method: "POST",
+        body: JSON.stringify({ credential }),
+      });
+      const result = await res.json();
+
+      if (result.status === "success") {
+        setUser(result.user);
+        fetchStats();
+        setIsRegisterMode(false);
+        setStatusModal({
+          isOpen: true,
+          status: "success",
+          title: "Selamat Datang!",
+          message:
+            "Akun Anda berhasil dibuat. Anda sekarang login sebagai User.",
+        });
+      } else {
+        setStatusModal({
+          isOpen: true,
+          status: "error",
+          title: "Registrasi Gagal",
+          message: result.message,
+        });
+      }
+    } catch (e) {
+      alert("Gagal melakukan registrasi.");
+    }
+  };
+
+  const fetchStats = async () => {
+    setErrorMsg(null);
+    try {
+      const res = await fetch("/api/admin.php?action=stats");
+      if (!res.ok) throw new Error(`Server Error: ${res.status}`);
+      const json = await res.json();
+      if (json.status === "error") throw new Error(json.message);
+      setData(json);
+    } catch (e: any) {
+      setErrorMsg(e.message || "Gagal memuat data.");
+    }
+  };
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch("/api/users.php");
+      const json = await res.json();
+      if (json.status === "success") setUserList(json.data);
+    } catch (e) {}
+  };
+
+  // --- CONTENT MANAGER FETCH ---
+  useEffect(() => {
+    if (activeTab === "content" && user) {
+      fetchFiles(contentTab);
+    }
+  }, [activeTab, contentTab, refreshTrigger, user]);
+
+  const fetchFiles = async (type: string) => {
+    try {
+      const res = await fetch(`/api/content.php?type=${type}`);
+      const json = await res.json();
+      if (json.status === "success") {
+        setFileList(json.data);
+      }
+    } catch (e) {
+      console.error("Gagal load files", e);
+    }
+  };
+
+  // --- CONTENT ACTIONS ---
+  const handleContentUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    behavior = "ask",
+  ) => {
+    if (!e.target.files || !e.target.files[0]) return;
+    const file = e.target.files[0];
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("behavior", behavior); // ask, overwrite, rename
+
+    try {
+      const res = await fetch(
+        `/api/content.php?action=upload&type=${contentTab}`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
+      const json = await res.json();
+
+      if (json.status === "conflict") {
+        // Show Conflict Modal
+        setUploadConflict({ isOpen: true, file, type: contentTab });
+      } else if (json.status === "success") {
+        setUploadConflict({ isOpen: false, file: null, type: "" });
+        setRefreshTrigger((prev) => prev + 1); // Refresh list ONLY (No Rebuild Trigger)
+        setStatusModal({
+          isOpen: true,
+          status: "success",
+          title: "Upload Berhasil",
+          message: json.message,
+        });
+      } else {
+        throw new Error(json.message);
+      }
+    } catch (e: any) {
+      setStatusModal({
+        isOpen: true,
+        status: "error",
+        title: "Upload Gagal",
+        message: e.message || "Terjadi kesalahan upload.",
+      });
+    }
+    // Reset input
+    e.target.value = "";
+  };
+
+  const deleteContent = async (filename: string) => {
+    if (
+      !window.confirm(
+        `Yakin ingin menghapus ${filename}? Aksi ini tidak dapat dibatalkan.`,
+      )
+    )
+      return;
+
+    try {
+      const res = await fetch(
+        `/api/content.php?action=delete&type=${contentTab}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename }),
+        },
+      );
+      const json = await res.json();
+      if (json.status === "success") {
+        setRefreshTrigger((prev) => prev + 1); // Refresh list ONLY (No Rebuild Trigger)
+      } else {
+        alert(json.message);
+      }
+    } catch (e) {
+      alert("Gagal menghapus file.");
+    }
+  };
+
+  const triggerRebuild = async () => {
+    if (
+      !window.confirm(
+        "Yakin ingin melakukan Rebuild Website? Proses ini memakan waktu 1-2 menit. Pastikan Anda telah meninjau semua perubahan file.",
+      )
+    )
+      return;
+    setIsRebuilding(true);
+    try {
+      const res = await fetch(`/api/content.php?action=rebuild`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (json.status === "success") {
+        setStatusModal({
+          isOpen: true,
+          status: "success",
+          title: "Rebuild Dimulai",
+          message: json.message,
+        });
+      } else {
+        alert(json.message);
+      }
+    } catch (e) {
+      alert("Gagal menghubungi server.");
+    } finally {
+      setIsRebuilding(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    const init = async () => {
+      try {
+        const authRes = await fetch("/api/auth.php?action=check");
+        const authData = await authRes.json();
+        if (isMounted) {
+          if (authData.status === "authenticated") {
+            setUser(authData.user);
+            fetchStats();
+            if (authData.user.role === "super_admin") fetchUsers();
+          } else {
+            if (!document.getElementById("google-client-script")) {
+              const script = document.createElement("script");
+              script.src = "https://accounts.google.com/gsi/client";
+              script.async = true;
+              script.id = "google-client-script";
+              script.onload = initializeGoogleButton;
+              document.body.appendChild(script);
+            } else {
+              setTimeout(initializeGoogleButton, 500);
+            }
+          }
+          setLoading(false);
+        }
+      } catch (e) {
+        if (isMounted) setErrorMsg("Gagal menghubungi server autentikasi.");
+        setLoading(false);
+      }
+    };
+    init();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth.php?action=check');
-      const data = await response.json();
-      
-      if (data.success && data.user) {
-        setUser(data.user);
-        if (data.user.role === 'operator' || data.user.role === 'super_admin') {
-          loadDashboardData();
-        }
-      } else {
-        window.location.href = '/login';
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      window.location.href = '/login';
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDashboardData = async () => {
-    try {
-      const response = await fetch('/api/admin.php?action=stats');
-      const data = await response.json();
-      
-      if (data.success) {
-        setStats(data.stats);
-        setActivityData(data.activityData);
-        setVisitsData(data.visitsData);
-        setRatingData(data.ratingData);
-        setSurveyData(data.surveyData);
-        setSurveyAvgData(data.surveyAvgData);
-      }
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-    }
-  };
-
-  const loadFeedbacks = async () => {
-    try {
-      const params = new URLSearchParams({
-        action: 'feedback',
-        ...feedbackFilter
-      });
-      const response = await fetch(`/api/admin.php?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setFeedbacks(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load feedbacks:', error);
-    }
-  };
-
-  const loadSurveys = async () => {
-    try {
-      const params = new URLSearchParams({
-        action: 'survey',
-        ...surveyFilter
-      });
-      const response = await fetch(`/api/admin.php?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setSurveys(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load surveys:', error);
-    }
-  };
-
-  const loadVisits = async () => {
-    try {
-      const params = new URLSearchParams({
-        action: 'visits',
-        ...visitsFilter
-      });
-      const response = await fetch(`/api/admin.php?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setVisits(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load visits:', error);
-    }
-  };
-
-  const loadPosts = async () => {
-    try {
-      const params = new URLSearchParams({
-        action: 'posts',
-        ...postsFilter
-      });
-      const response = await fetch(`/api/admin.php?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setPosts(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load posts:', error);
-    }
-  };
-
-  const loadPengaduans = async () => {
-    try {
-      const params = new URLSearchParams({
-        action: 'list',
-        ...pengaduanFilter
-      });
-      const response = await fetch(`/api/admin_pengaduan.php?${params}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setPengaduans(data.data);
-        setPengaduanStats(data.stats);
-      }
-    } catch (error) {
-      console.error('Failed to load pengaduans:', error);
-    }
-  };
-
-  const loadUsers = async () => {
-    try {
-      const response = await fetch('/api/admin.php?action=users');
-      const data = await response.json();
-      
-      if (data.success) {
-        setUsers(data.data);
-      }
-    } catch (error) {
-      console.error('Failed to load users:', error);
-    }
-  };
-
-  const loadContentFiles = async () => {
-    try {
-      const response = await fetch('/api/admin.php?action=content_list');
-      const data = await response.json();
-      
-      if (data.success) {
-        setArtikelFiles(data.artikel || []);
-        setGambarFiles(data.gambar || []);
-        setVideoFiles(data.video || []);
-      }
-    } catch (error) {
-      console.error('Failed to load content files:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (activeTab === 'feedback') loadFeedbacks();
-    else if (activeTab === 'surveys') loadSurveys();
-    else if (activeTab === 'visits') loadVisits();
-    else if (activeTab === 'posts') loadPosts();
-    else if (activeTab === 'pengaduan') loadPengaduans();
-    else if (activeTab === 'users') loadUsers();
-    else if (activeTab === 'content') loadContentFiles();
-  }, [activeTab, feedbackFilter, surveyFilter, visitsFilter, postsFilter, pengaduanFilter]);
-
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth.php?action=logout', { method: 'POST' });
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
+    await fetch("/api/auth.php?action=logout");
+    setUser(null);
+    window.location.reload();
   };
 
-  const handleExport = async (type: string) => {
-    try {
-      let params: any = { action: 'export', type };
-      
-      if (type === 'feedback') params = { ...params, ...feedbackFilter };
-      else if (type === 'survey') params = { ...params, ...surveyFilter };
-      else if (type === 'visits') params = { ...params, ...visitsFilter };
-      else if (type === 'posts') params = { ...params, ...postsFilter };
-      else if (type === 'pengaduan') params = { ...params, ...pengaduanFilter };
-      
-      const queryString = new URLSearchParams(params).toString();
-      const endpoint = type === 'pengaduan' ? '/api/admin_pengaduan.php' : '/api/admin.php';
-      window.open(`${endpoint}?${queryString}`, '_blank');
-    } catch (error) {
-      console.error('Export failed:', error);
-    }
+  const downloadReport = (type: string) => {
+    window.open(`/api/admin.php?action=export&type=${type}`, "_blank");
   };
 
-  const handlePrint = (type: string) => {
-    let params: any = {};
-    
-    if (type === 'feedback') params = { ...feedbackFilter };
-    else if (type === 'survey') params = { ...surveyFilter };
-    else if (type === 'visits') params = { ...visitsFilter };
-    else if (type === 'posts') params = { ...postsFilter };
-    else if (type === 'pengaduan') params = { ...pengaduanFilter };
-    
-    const queryString = new URLSearchParams(params).toString();
-    const endpoint = type === 'pengaduan' ? '/api/print_pengaduan_pdf.php' : '/api/print_pdf.php';
-    window.open(`${endpoint}?type=${type}&${queryString}`, '_blank');
+  const printPDF = () => {
+    window.open(
+      `/api/print_pdf.php?month=${selectedMonth}&year=${selectedYear}`,
+      "_blank",
+    );
   };
 
-  const handleImport = async () => {
-    if (!importFile) {
-      alert('Pilih file CSV terlebih dahulu');
-      return;
-    }
-
-    setImporting(true);
-    const formData = new FormData();
-    formData.append('file', importFile);
-    formData.append('action', 'import');
-
+  // --- LOGIC USER MANAGEMENT ---
+  const updateUser = async (id: number, role: string, status: string) => {
     try {
-      const endpoint = importType === 'pengaduan' ? '/api/import_pengaduan.php' : '/api/import.php';
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        body: formData
+      const res = await fetch(`/api/users.php?action=update`, {
+        method: "POST",
+        body: JSON.stringify({ id, role, status }),
       });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        alert(`Berhasil import ${data.imported || 0} data`);
-        setImportModalOpen(false);
-        setImportFile(null);
-        
-        if (importType === 'feedback') loadFeedbacks();
-        else if (importType === 'survey') loadSurveys();
-        else if (importType === 'visits') loadVisits();
-        else if (importType === 'pengaduan') loadPengaduans();
-      } else {
-        alert('Import gagal: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Import failed:', error);
-      alert('Import gagal');
-    } finally {
-      setImporting(false);
+      const json = await res.json();
+      if (json.status === "success") {
+        fetchUsers();
+        setEditUserModal({ isOpen: false, user: null });
+        alert("User updated!");
+      } else alert(json.message);
+    } catch (e) {
+      alert("Gagal update user");
     }
   };
 
-  const downloadTemplate = (type: string) => {
-    const endpoint = type === 'pengaduan' ? '/api/import_pengaduan.php' : '/api/import.php';
-    window.open(`${endpoint}?action=template&type=${type}`, '_blank');
-  };
-
-  const handleDeleteFeedback = async (id: number) => {
-    if (!confirm('Hapus feedback ini?')) return;
-    
+  const deleteUser = async (id: number) => {
     try {
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_feedback', id })
+      const res = await fetch(`/api/users.php?action=delete`, {
+        method: "POST",
+        body: JSON.stringify({ id }),
       });
-      
-      const data = await response.json();
-      if (data.success) {
-        loadFeedbacks();
-      }
-    } catch (error) {
-      console.error('Delete failed:', error);
+      const json = await res.json();
+      if (json.status === "success") {
+        fetchUsers();
+        alert("User deleted!");
+      } else alert(json.message);
+    } catch (e) {
+      alert("Gagal hapus user");
     }
   };
 
-  const handleDeleteSurvey = async (id: number) => {
-    if (!confirm('Hapus survey ini?')) return;
-    
-    try {
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_survey', id })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        loadSurveys();
-      }
-    } catch (error) {
-      console.error('Delete failed:', error);
-    }
+  // --- ACTION HANDLERS ---
+  const openDetail = (item: any, type: "feedback" | "survey") => {
+    setSelectedItem(item);
+    setModalType(type);
   };
 
-  const handleDeletePengaduan = async (id: number) => {
-    if (user?.role !== 'super_admin') {
-      alert('Hanya Super Admin yang bisa menghapus pengaduan');
-      return;
-    }
-    
-    if (!confirm('Hapus pengaduan ini?')) return;
-    
-    try {
-      const response = await fetch('/api/admin_pengaduan.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', id })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        loadPengaduans();
-      } else {
-        alert('Gagal menghapus: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Delete failed:', error);
-      alert('Gagal menghapus pengaduan');
-    }
-  };
-
-  const openEditPengaduan = (pengaduan: Pengaduan) => {
-    setSelectedPengaduan(pengaduan);
-    setEditForm({
-      status: pengaduan.status,
-      tanggapan: pengaduan.tanggapan || ''
+  const requestDelete = (ids: number[], type: "feedback" | "survey") => {
+    setConfirmModal({
+      isOpen: true,
+      ids,
+      type,
+      count: ids.length,
     });
-    setEditModalOpen(true);
   };
 
-  const handleUpdatePengaduan = async () => {
-    if (!selectedPengaduan) return;
-    
+  const executeDelete = async () => {
+    if (confirmModal.type === "user" && confirmModal.action) {
+      confirmModal.action();
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      return;
+    }
+
+    setConfirmModal((prev) => ({ ...prev, isOpen: false }));
     try {
-      const response = await fetch('/api/admin_pengaduan.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/crud.php?action=delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: 'update',
-          id: selectedPengaduan.id,
-          status: editForm.status,
-          tanggapan: editForm.tanggapan
-        })
+          ids: confirmModal.ids,
+          type: confirmModal.type,
+        }),
       });
-      
-      const data = await response.json();
-      if (data.success) {
-        setEditModalOpen(false);
-        loadPengaduans();
-        alert('Pengaduan berhasil diupdate');
+      const json = await res.json();
+
+      if (json.status === "success") {
+        fetchStats();
+        if (
+          selectedItem &&
+          confirmModal.ids.includes(selectedItem.id) &&
+          modalType === confirmModal.type
+        ) {
+          setSelectedItem(null);
+          setModalType(null);
+        }
+        setStatusModal({
+          isOpen: true,
+          status: "success",
+          title: "Berhasil Dihapus",
+          message: `${confirmModal.count} data telah berhasil dihapus dari database.`,
+        });
       } else {
-        alert('Gagal update: ' + (data.message || 'Unknown error'));
+        throw new Error(json.message);
       }
-    } catch (error) {
-      console.error('Update failed:', error);
-      alert('Gagal update pengaduan');
-    }
-  };
-
-  const handleUserSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const action = editingUser ? 'update_user' : 'create_user';
-      const payload = editingUser 
-        ? { action, id: editingUser.id, ...userFormData }
-        : { action, ...userFormData };
-      
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+    } catch (e: any) {
+      setStatusModal({
+        isOpen: true,
+        status: "error",
+        title: "Gagal Menghapus",
+        message: e.message || "Terjadi kesalahan sistem saat menghapus data.",
       });
-      
-      const data = await response.json();
-      if (data.success) {
-        setEditingUser(null);
-        setUserFormData({ email: '', name: '', role: 'user', status: 'active' });
-        loadUsers();
-      } else {
-        alert(data.message || 'Operation failed');
-      }
-    } catch (error) {
-      console.error('User operation failed:', error);
     }
   };
 
-  const handleDeleteUser = async (id: number) => {
-    if (!confirm('Hapus user ini?')) return;
-    
-    try {
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_user', id })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        loadUsers();
-      }
-    } catch (error) {
-      console.error('Delete failed:', error);
-    }
-  };
-
-  const handleFileUpload = async () => {
-    if (!selectedFile) return;
-
-    setUploading(true);
-    const formData = new FormData();
-    formData.append('file', selectedFile);
-    formData.append('type', uploadType);
-
-    try {
-      const response = await fetch('/api/admin.php?action=upload_content', {
-        method: 'POST',
-        body: formData
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        alert('Upload berhasil');
-        setSelectedFile(null);
-        loadContentFiles();
-      } else {
-        alert('Upload gagal: ' + (data.message || 'Unknown error'));
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      alert('Upload gagal');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleDeleteContent = async (filename: string, type: string) => {
-    if (!confirm(`Hapus ${filename}?`)) return;
-    
-    try {
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete_content', filename, type })
-      });
-      
-      const data = await response.json();
-      if (data.success) {
-        loadContentFiles();
-      }
-    } catch (error) {
-      console.error('Delete failed:', error);
-    }
-  };
-
-  const handleRebuildSite = async () => {
-    if (!confirm('Rebuild website? Proses ini akan memakan waktu beberapa menit.')) return;
-    
-    try {
-      const response = await fetch('/api/admin.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'rebuild_site' })
-      });
-      
-      const data = await response.json();
-      alert(data.message || 'Rebuild complete');
-    } catch (error) {
-      console.error('Rebuild failed:', error);
-      alert('Rebuild failed');
-    }
-  };
-
-  const formatDateIndo = (dateString: string) => {
-    const date = new Date(dateString);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Oct', 'Nov', 'Des'];
-    return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-  };
-
-  const getMonthFromDate = (dateString: string) => {
-    return new Date(dateString).getMonth() + 1;
-  };
-
-  const getYearFromDate = (dateString: string) => {
-    return new Date(dateString).getFullYear();
-  };
-
-  if (loading) {
+  if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="text-center p-12">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+        Memuat Sistem...
       </div>
     );
-  }
 
-  if (!user || (user.role !== 'operator' && user.role !== 'super_admin')) {
+  if (!user)
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-red-600 mb-4">Akses ditolak. Anda tidak memiliki izin untuk mengakses halaman ini.</p>
-          <button onClick={handleLogout} className="bg-blue-600 text-white px-4 py-2 rounded">
-            Kembali ke Login
+      <div className="flex min-h-[60vh] flex-col items-center justify-center">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-white p-8 text-center shadow-xl dark:border-darkmode-border dark:bg-darkmode-light">
+          <img
+            src="/images/logo.png"
+            alt="Logo"
+            className="mx-auto mb-6 h-12"
+          />
+          <h2 className="h4 mb-2">
+            {isRegisterMode ? "Registrasi Akun Baru" : "Login Portal Admin"}
+          </h2>
+          <p className="text-sm text-gray-500 mb-6">
+            {isRegisterMode
+              ? "Daftarkan email Google Anda untuk akses."
+              : "Gunakan akun Google yang terdaftar."}
+          </p>
+          <div className="flex justify-center h-[50px]">
+            <div id="googleBtn"></div>
+          </div>
+          <button
+            onClick={() => setIsRegisterMode(!isRegisterMode)}
+            className="mt-6 text-sm text-primary hover:underline"
+          >
+            {isRegisterMode
+              ? "Sudah punya akun? Login disini"
+              : "Belum punya akun? Daftar sekarang"}
           </button>
         </div>
+        <StatusModal
+          isOpen={statusModal.isOpen}
+          status={statusModal.status}
+          title={statusModal.title}
+          message={statusModal.message}
+          onClose={() => setStatusModal({ ...statusModal, isOpen: false })}
+        />
       </div>
     );
-  }
+
+  const monthOptions = [
+    "Semua Bulan",
+    "Januari",
+    "Februari",
+    "Maret",
+    "April",
+    "Mei",
+    "Juni",
+    "Juli",
+    "Agustus",
+    "September",
+    "Oktober",
+    "November",
+    "Desember",
+  ];
+  const yearOptions = [0, 2024, 2025, 2026, 2027];
+
+  const userRole = user.role || "user";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <img src={user.picture} alt={user.name} className="w-10 h-10 rounded-full" />
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">Admin Dashboard</h1>
-                <p className="text-sm text-gray-600">{user.name} ({user.role})</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Tabs */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8 overflow-x-auto">
-            {['overview', 'content', 'posts', 'visits', 'feedback', 'surveys', 'pengaduan', 'users'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
-                  activeTab === tab
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
+    <div className="min-h-screen pb-12 relative">
+      {/* Header Panel */}
+      <div className="mb-8 flex flex-col xl:flex-row items-center justify-between gap-4 rounded-xl bg-white p-6 border border-border shadow-sm dark:bg-darkmode-light dark:border-darkmode-border">
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <img
+            src={user.picture}
+            alt={user.name}
+            className="h-12 w-12 rounded-full border border-gray-200 shadow-sm"
+          />
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="h5 mb-0 font-bold">{user.name}</h3>
+              <span
+                className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${userRole === "super_admin" ? "bg-red-100 text-red-700" : userRole === "operator" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}
               >
-                {tab === 'overview' && 'Overview'}
-                {tab === 'content' && 'Content Manager'}
-                {tab === 'posts' && 'Posts Stats'}
-                {tab === 'visits' && 'Site Visits'}
-                {tab === 'feedback' && 'Feedback'}
-                {tab === 'surveys' && 'Surveys'}
-                {tab === 'pengaduan' && 'Pengaduan'}
-                {tab === 'users' && 'Users'}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
-      {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Overview Tab */}
-        {activeTab === 'overview' && stats && (
-          <div className="space-y-6">
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Total Posts</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalPosts || 0}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Total Visits</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalVisits || 0}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Total Feedback</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalFeedback || 0}</p>
-              </div>
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-gray-500 text-sm font-medium">Total Survey</h3>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{stats.totalSurvey || 0}</p>
-              </div>
+                {userRole.replace("_", " ")}
+              </span>
             </div>
-
-            {/* Charts */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {activityData && (
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-semibold mb-4">Activity Trend (30 Days)</h3>
-                  <Line data={activityData} />
-                </div>
-              )}
-              
-              {visitsData && (
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-semibold mb-4">Site Visits (7 Days)</h3>
-                  <Line data={visitsData} />
-                </div>
-              )}
-              
-              {ratingData && (
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-semibold mb-4">Feedback Rating Distribution</h3>
-                  <Pie data={ratingData} />
-                </div>
-              )}
-              
-              {surveyData && (
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-lg font-semibold mb-4">Survey Score Distribution</h3>
-                  <Pie data={surveyData} />
-                </div>
-              )}
-            </div>
-
-            {surveyAvgData && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Average Survey Scores by Category</h3>
-                <Bar data={surveyAvgData} />
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Content Manager Tab */}
-        {activeTab === 'content' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Upload Content</h2>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>
-                  <select
-                    value={uploadType}
-                    onChange={(e) => setUploadType(e.target.value as any)}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="artikel">Artikel (.md)</option>
-                    <option value="gambar">Gambar (.jpg, .png, .gif)</option>
-                    <option value="video">Video (.mp4, .webm)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">File</label>
-                  <input
-                    type="file"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    className="w-full border rounded px-3 py-2"
-                    accept={
-                      uploadType === 'artikel' ? '.md' :
-                      uploadType === 'gambar' ? 'image/*' :
-                      'video/*'
-                    }
-                  />
-                </div>
-                <button
-                  onClick={handleFileUpload}
-                  disabled={!selectedFile || uploading}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {uploading ? 'Uploading...' : 'Upload'}
-                </button>
-              </div>
-            </div>
-
-            {/* File Lists */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Artikel */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Artikel Files</h3>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {artikelFiles.map((file, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-2 border rounded">
-                      <span className="text-sm truncate">{file}</span>
-                      <button
-                        onClick={() => handleDeleteContent(file, 'artikel')}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                  {artikelFiles.length === 0 && (
-                    <p className="text-gray-500 text-sm">No files</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Gambar */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Gambar Files</h3>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {gambarFiles.map((file, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-2 border rounded">
-                      <span className="text-sm truncate">{file}</span>
-                      <button
-                        onClick={() => handleDeleteContent(file, 'gambar')}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                  {gambarFiles.length === 0 && (
-                    <p className="text-gray-500 text-sm">No files</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Video */}
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Video Files</h3>
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {videoFiles.map((file, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-2 border rounded">
-                      <span className="text-sm truncate">{file}</span>
-                      <button
-                        onClick={() => handleDeleteContent(file, 'video')}
-                        className="text-red-600 hover:text-red-800 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
-                  {videoFiles.length === 0 && (
-                    <p className="text-gray-500 text-sm">No files</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold mb-4">Rebuild Website</h3>
-              <p className="text-gray-600 mb-4">
-                Rebuild the Astro static site to apply content changes. This may take a few minutes.
-              </p>
-              <button
-                onClick={handleRebuildSite}
-                className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-              >
-                Rebuild Site
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Posts Stats Tab */}
-        {activeTab === 'posts' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Posts Statistics</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={postsFilter.month}
-                    onChange={(e) => setPostsFilter({ ...postsFilter, month: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Months</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={postsFilter.year}
-                    onChange={(e) => setPostsFilter({ ...postsFilter, year: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Years</option>
-                    {[2024, 2025, 2026].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => handleExport('posts')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handlePrint('posts')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                  >
-                    Print PDF
-                  </button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Views</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {posts.map((post, idx) => (
-                      <tr key={idx}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{post.slug}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{post.views}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Visits Tab */}
-        {activeTab === 'visits' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Site Visits Log</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={visitsFilter.month}
-                    onChange={(e) => setVisitsFilter({ ...visitsFilter, month: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Months</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={visitsFilter.year}
-                    onChange={(e) => setVisitsFilter({ ...visitsFilter, year: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Years</option>
-                    {[2024, 2025, 2026].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => {
-                      setImportType('visits');
-                      setImportModalOpen(true);
-                    }}
-                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
-                  >
-                    Import CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport('visits')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handlePrint('visits')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                  >
-                    Print PDF
-                  </button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP Address</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User Agent</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created At</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {visits.map((visit, idx) => (
-                      <tr key={idx}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{visit.ip_address}</td>
-                        <td className="px-6 py-4 text-sm max-w-xs truncate">{visit.user_agent}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDateIndo(visit.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Feedback Tab */}
-        {activeTab === 'feedback' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Feedback Data</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={feedbackFilter.month}
-                    onChange={(e) => setFeedbackFilter({ ...feedbackFilter, month: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Months</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={feedbackFilter.year}
-                    onChange={(e) => setFeedbackFilter({ ...feedbackFilter, year: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Years</option>
-                    {[2024, 2025, 2026].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={feedbackFilter.rating}
-                    onChange={(e) => setFeedbackFilter({ ...feedbackFilter, rating: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Ratings</option>
-                    {[1,2,3,4,5].map(r => (
-                      <option key={r} value={r}>{r} ★</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={() => {
-                      setImportType('feedback');
-                      setImportModalOpen(true);
-                    }}
-                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
-                  >
-                    Import CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport('feedback')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handlePrint('feedback')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                  >
-                    Print PDF
-                  </button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Message</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                      {user.role === 'super_admin' && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {feedbacks.map((fb) => (
-                      <tr key={fb.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{fb.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{'★'.repeat(fb.rating)}</td>
-                        <td className="px-6 py-4 text-sm max-w-xs truncate">{fb.message}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{fb.ip_address}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDateIndo(fb.created_at)}</td>
-                        {user.role === 'super_admin' && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => handleDeleteFeedback(fb.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Surveys Tab */}
-        {activeTab === 'surveys' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Survey Responses</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={surveyFilter.month}
-                    onChange={(e) => setSurveyFilter({ ...surveyFilter, month: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Months</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={surveyFilter.year}
-                    onChange={(e) => setSurveyFilter({ ...surveyFilter, year: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Years</option>
-                    {[2024, 2025, 2026].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={surveyFilter.category}
-                    onChange={(e) => setSurveyFilter({ ...surveyFilter, category: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Categories</option>
-                    <option value="zi">Zona Integritas</option>
-                    <option value="service">Pelayanan</option>
-                    <option value="academic">Akademik</option>
-                    <option value="facilities">Fasilitas</option>
-                    <option value="management">Manajemen</option>
-                    <option value="culture">Budaya</option>
-                  </select>
-                  <button
-                    onClick={() => {
-                      setImportType('survey');
-                      setImportModalOpen(true);
-                    }}
-                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
-                  >
-                    Import CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport('survey')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handlePrint('survey')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                  >
-                    Print PDF
-                  </button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ZI</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Academic</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Facilities</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Management</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Culture</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
-                      {user.role === 'super_admin' && (
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {surveys.map((survey) => (
-                      <tr key={survey.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.respondent_name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.respondent_role}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_zi}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_service}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_academic}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_facilities}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_management}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{survey.score_culture}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDateIndo(survey.created_at)}</td>
-                        {user.role === 'super_admin' && (
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
-                            <button
-                              onClick={() => handleDeleteSurvey(survey.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Pengaduan Tab */}
-        {activeTab === 'pengaduan' && (
-          <div className="space-y-6">
-            {/* Stats Cards */}
-            {pengaduanStats && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-gray-500 text-sm font-medium">Total Pengaduan</h3>
-                  <p className="text-3xl font-bold text-gray-900 mt-2">{pengaduanStats.total}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-gray-500 text-sm font-medium">Menunggu</h3>
-                  <p className="text-3xl font-bold text-yellow-600 mt-2">{pengaduanStats.menunggu}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-gray-500 text-sm font-medium">Diproses</h3>
-                  <p className="text-3xl font-bold text-blue-600 mt-2">{pengaduanStats.diproses}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-gray-500 text-sm font-medium">Selesai</h3>
-                  <p className="text-3xl font-bold text-green-600 mt-2">{pengaduanStats.selesai}</p>
-                </div>
-                <div className="bg-white p-6 rounded-lg shadow">
-                  <h3 className="text-gray-500 text-sm font-medium">Ditolak</h3>
-                  <p className="text-3xl font-bold text-red-600 mt-2">{pengaduanStats.ditolak}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Status Chart */}
-            {pengaduanStats && (
-              <div className="bg-white p-6 rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-4">Status Pengaduan</h3>
-                <Pie
-                  data={{
-                    labels: ['Menunggu', 'Diproses', 'Selesai', 'Ditolak'],
-                    datasets: [{
-                      data: [
-                        pengaduanStats.menunggu,
-                        pengaduanStats.diproses,
-                        pengaduanStats.selesai,
-                        pengaduanStats.ditolak
-                      ],
-                      backgroundColor: ['#EAB308', '#3B82F6', '#10B981', '#EF4444']
-                    }]
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Data Table */}
-            <div className="bg-white p-6 rounded-lg shadow">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold">Data Pengaduan</h2>
-                <div className="flex gap-2">
-                  <select
-                    value={pengaduanFilter.month}
-                    onChange={(e) => setPengaduanFilter({ ...pengaduanFilter, month: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Months</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11,12].map(m => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={pengaduanFilter.year}
-                    onChange={(e) => setPengaduanFilter({ ...pengaduanFilter, year: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Years</option>
-                    {[2024, 2025, 2026].map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                  <select
-                    value={pengaduanFilter.status}
-                    onChange={(e) => setPengaduanFilter({ ...pengaduanFilter, status: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Status</option>
-                    <option value="menunggu">Menunggu</option>
-                    <option value="diproses">Diproses</option>
-                    <option value="selesai">Selesai</option>
-                    <option value="ditolak">Ditolak</option>
-                  </select>
-                  <select
-                    value={pengaduanFilter.kategori}
-                    onChange={(e) => setPengaduanFilter({ ...pengaduanFilter, kategori: e.target.value })}
-                    className="border rounded px-3 py-2 text-sm"
-                  >
-                    <option value="">All Kategori</option>
-                    <option value="Pelayanan">Pelayanan</option>
-                    <option value="Fasilitas">Fasilitas</option>
-                    <option value="Akademik">Akademik</option>
-                    <option value="Administrasi">Administrasi</option>
-                    <option value="Lainnya">Lainnya</option>
-                  </select>
-                  <button
-                    onClick={() => {
-                      setImportType('pengaduan');
-                      setImportModalOpen(true);
-                    }}
-                    className="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 text-sm"
-                  >
-                    Import CSV
-                  </button>
-                  <button
-                    onClick={() => handleExport('pengaduan')}
-                    className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 text-sm"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handlePrint('pengaduan')}
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm"
-                  >
-                    Print PDF
-                  </button>
-                </div>
-              </div>
-              
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Pelapor</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kategori</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Judul</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aksi</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {pengaduans.map((p) => (
-                      <tr key={p.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{formatDateIndo(p.created_at)}</td>
-                        <td className="px-6 py-4 text-sm">
-                          <div>{p.nama}</div>
-                          <div className="text-gray-500 text-xs">{p.email}</div>
-                          <div className="text-gray-500 text-xs">{p.telepon}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{p.kategori}</td>
-                        <td className="px-6 py-4 text-sm max-w-xs">
-                          <div className="font-medium">{p.judul}</div>
-                          <div className="text-gray-500 text-xs truncate">{p.isi_pengaduan}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            p.status === 'menunggu' ? 'bg-yellow-100 text-yellow-800' :
-                            p.status === 'diproses' ? 'bg-blue-100 text-blue-800' :
-                            p.status === 'selesai' ? 'bg-green-100 text-green-800' :
-                            'bg-red-100 text-red-800'
-                          }`}>
-                            {p.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() => openEditPengaduan(p)}
-                            className="text-blue-600 hover:text-blue-800 mr-3"
-                          >
-                            Edit
-                          </button>
-                          {user.role === 'super_admin' && (
-                            <button
-                              onClick={() => handleDeletePengaduan(p.id)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Users Tab */}
-        {activeTab === 'users' && user.role === 'super_admin' && (
-          <div className="space-y-6">
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">
-                {editingUser ? 'Edit User' : 'Create New User'}
-              </h2>
-              <form onSubmit={handleUserSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={userFormData.email}
-                    onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                    disabled={!!editingUser}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                  <input
-                    type="text"
-                    value={userFormData.name}
-                    onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                  <select
-                    value={userFormData.role}
-                    onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="user">User</option>
-                    <option value="operator">Operator</option>
-                    <option value="super_admin">Super Admin</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    value={userFormData.status}
-                    onChange={(e) => setUserFormData({ ...userFormData, status: e.target.value })}
-                    className="w-full border rounded px-3 py-2"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    type="submit"
-                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                  >
-                    {editingUser ? 'Update' : 'Create'}
-                  </button>
-                  {editingUser && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingUser(null);
-                        setUserFormData({ email: '', name: '', role: 'user', status: 'active' });
-                      }}
-                      className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                </div>
-              </form>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow">
-              <h2 className="text-xl font-semibold mb-4">Users List</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {users.map((u) => (
-                      <tr key={u.id}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{u.email}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">{u.name}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            u.role === 'super_admin' ? 'bg-purple-100 text-purple-800' :
-                            u.role === 'operator' ? 'bg-blue-100 text-blue-800' :
-                            'bg-gray-100 text-gray-800'
-                          }`}>
-                            {u.role}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <span className={`px-2 py-1 rounded text-xs font-medium ${
-                            u.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                          }`}>
-                            {u.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <button
-                            onClick={() => {
-                              setEditingUser(u);
-                              setUserFormData({
-                                email: u.email,
-                                name: u.name,
-                                role: u.role,
-                                status: u.status
-                              });
-                            }}
-                            className="text-blue-600 hover:text-blue-800 mr-3"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteUser(u.id)}
-                            className="text-red-600 hover:text-red-800"
-                          >
-                            Delete
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* Import Modal */}
-      {importModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h3 className="text-lg font-semibold mb-4">Import {importType.toUpperCase()} Data</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">
-                  Download template CSV terlebih dahulu, isi data, kemudian upload kembali.
-                </p>
-                <button
-                  onClick={() => downloadTemplate(importType)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 text-sm w-full"
-                >
-                  Download Template CSV
-                </button>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Upload CSV File</label>
-                <input
-                  type="file"
-                  accept=".csv"
-                  onChange={(e) => setImportFile(e.target.files?.[0] || null)}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={handleImport}
-                  disabled={!importFile || importing}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1 disabled:opacity-50"
-                >
-                  {importing ? 'Importing...' : 'Import'}
-                </button>
-                <button
-                  onClick={() => {
-                    setImportModalOpen(false);
-                    setImportFile(null);
-                  }}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+            <p className="text-sm text-text-light">{user.email}</p>
           </div>
         </div>
-      )}
-
-      {/* Edit Pengaduan Modal */}
-      {editModalOpen && selectedPengaduan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold mb-4">Edit Pengaduan</h3>
-            
-            <div className="space-y-4">
-              <div className="bg-gray-50 p-4 rounded">
-                <h4 className="font-medium mb-2">Detail Pengaduan:</h4>
-                <div className="text-sm space-y-1">
-                  <p><span className="font-medium">Nama:</span> {selectedPengaduan.nama}</p>
-                  <p><span className="font-medium">Email:</span> {selectedPengaduan.email}</p>
-                  <p><span className="font-medium">Telepon:</span> {selectedPengaduan.telepon}</p>
-                  <p><span className="font-medium">Kategori:</span> {selectedPengaduan.kategori}</p>
-                  <p><span className="font-medium">Judul:</span> {selectedPengaduan.judul}</p>
-                  <p><span className="font-medium">Isi Pengaduan:</span></p>
-                  <p className="whitespace-pre-wrap bg-white p-2 rounded">{selectedPengaduan.isi_pengaduan}</p>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+        <div className="flex flex-wrap items-center justify-center gap-2 w-full md:w-auto">
+          {/* PDF Filter & Actions (Only Operator & Admin) */}
+          {(userRole === "operator" || userRole === "super_admin") && (
+            <>
+              <div className="flex items-center gap-2 bg-gray-50 dark:bg-white/5 p-1.5 rounded-lg border border-border dark:border-darkmode-border mr-2">
+                <span className="text-xs font-bold px-2">Cetak:</span>
                 <select
-                  value={editForm.status}
-                  onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
-                  className="w-full border rounded px-3 py-2"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="text-xs bg-transparent outline-none"
                 >
-                  <option value="menunggu">Menunggu</option>
-                  <option value="diproses">Diproses</option>
-                  <option value="selesai">Selesai</option>
-                  <option value="ditolak">Ditolak</option>
+                  {monthOptions.slice(1).map((m, i) => (
+                    <option key={i} value={i + 1}>
+                      {m}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="text-xs bg-transparent outline-none"
+                >
+                  {yearOptions.slice(1).map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Tanggapan</label>
-                <textarea
-                  value={editForm.tanggapan}
-                  onChange={(e) => setEditForm({ ...editForm, tanggapan: e.target.value })}
-                  className="w-full border rounded px-3 py-2"
-                  rows={4}
-                  placeholder="Masukkan tanggapan terhadap pengaduan ini..."
-                />
+              <button
+                onClick={() => setImportModalOpen(true)}
+                className="btn btn-sm flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white border-orange-500 whitespace-nowrap"
+              >
+                <FaFileUpload /> Import
+              </button>
+              <button
+                onClick={printPDF}
+                className="btn btn-outline-primary btn-sm flex items-center gap-2 print:hidden whitespace-nowrap"
+              >
+                <FaDownload /> PDF
+              </button>
+            </>
+          )}
+          <button
+            onClick={async () => {
+              await fetch("/api/auth.php?action=logout");
+              window.location.reload();
+            }}
+            className="btn btn-primary btn-sm flex items-center gap-2 bg-red-500 border-red-500 hover:bg-red-600 print:hidden whitespace-nowrap"
+          >
+            <FaSignOutAlt /> Keluar
+          </button>
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="mb-8 rounded-xl bg-red-50 p-4 border border-red-200 text-red-700 flex items-center gap-3">
+          <FaExclamationTriangle className="text-xl" />
+          <div>
+            <p className="font-bold">Gagal memuat data</p>
+            <p className="text-sm">{errorMsg}</p>
+            <button
+              onClick={fetchStats}
+              className="mt-2 text-xs underline hover:text-red-900"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      )}
+
+      {data && (
+        <div className="animate-fade-in">
+          {/* Stats Cards */}
+          <div className="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard
+              label="Total Kunjungan"
+              value={data.overview.visits.toLocaleString()}
+              icon={<FaEye />}
+              color="text-blue-500"
+              bg="bg-blue-50 dark:bg-blue-900/20"
+            />
+            <StatCard
+              label="Artikel Dibaca"
+              value={data.overview.posts_count.toLocaleString()}
+              icon={<FaChartLine />}
+              color="text-green-500"
+              bg="bg-green-50 dark:bg-green-900/20"
+            />
+            <StatCard
+              label="Total Ulasan"
+              value={data.overview.feedback_count.toLocaleString()}
+              icon={<FaStar />}
+              color="text-yellow-500"
+              bg="bg-yellow-50 dark:bg-yellow-900/20"
+            />
+            <StatCard
+              label="Responden Survei"
+              value={data.overview.survey_count.toLocaleString()}
+              icon={<FaPoll />}
+              color="text-purple-500"
+              bg="bg-purple-50 dark:bg-purple-900/20"
+            />
+          </div>
+
+          {/* Navigation Tabs */}
+          <div className="mb-8 border-b border-border dark:border-darkmode-border">
+            <nav className="-mb-px flex space-x-8 overflow-x-auto">
+              {[
+                { id: "overview", label: "Ringkasan" },
+                { id: "content", label: "Manajemen Artikel & Media" },
+                { id: "posts", label: "Statistik Artikel" },
+                { id: "visits", label: "Riwayat Kunjungan" },
+                { id: "feedback", label: "Ulasan" },
+                { id: "surveys", label: "Survei" },
+                ...(userRole === "super_admin"
+                  ? [{ id: "users", label: "Manajemen User" }]
+                  : []),
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`whitespace-nowrap border-b-2 py-4 px-1 text-sm font-medium transition-colors ${activeTab === tab.id ? "border-primary text-primary" : "border-transparent text-gray-500 hover:border-gray-300 dark:text-gray-400"}`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+
+          {/* === CONTENT TABS === */}
+
+          {/* 1. OVERVIEW */}
+          {activeTab === "overview" && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="lg:col-span-2 rounded-xl border border-border bg-white p-6 shadow-sm dark:bg-darkmode-light dark:border-darkmode-border">
+                <h3 className="h6 mb-6">Tren Aktivitas</h3>
+                <div className="h-72">
+                  <Line
+                    data={{
+                      labels: data.charts.activity.labels,
+                      datasets: [
+                        {
+                          label: "Ulasan",
+                          data: data.charts.activity.feedback,
+                          borderColor: "#eab308",
+                          backgroundColor: "rgba(234, 179, 8, 0.1)",
+                          fill: true,
+                          tension: 0.4,
+                        },
+                        {
+                          label: "Survei",
+                          data: data.charts.activity.survey,
+                          borderColor: "#8b5cf6",
+                          backgroundColor: "rgba(139, 92, 246, 0.1)",
+                          fill: true,
+                          tension: 0.4,
+                        },
+                      ],
+                    }}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
+                </div>
               </div>
 
-              <div className="flex gap-2">
+              {/* Grafik Kunjungan (Baru) */}
+              <div className="lg:col-span-2 rounded-xl border border-border bg-white p-6 shadow-sm dark:bg-darkmode-light dark:border-darkmode-border">
+                <h3 className="h6 mb-6">Total Kunjungan Bulanan</h3>
+                <div className="h-72">
+                  <Line
+                    data={visitsChartData}
+                    options={{ responsive: true, maintainAspectRatio: false }}
+                  />
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-border bg-white p-6 shadow-sm dark:bg-darkmode-light dark:border-darkmode-border">
+                <h3 className="h6 mb-6 text-center">
+                  Distribusi Rating Bintang
+                </h3>
+                <div className="h-64 flex justify-center">
+                  <Pie
+                    data={{
+                      labels: ["5 ★", "4 ★", "3 ★", "2 ★", "1 ★"],
+                      datasets: [
+                        {
+                          label: "Jumlah",
+                          data: [5, 4, 3, 2, 1].map(
+                            (r) => data.charts.stars?.[r] || 0,
+                          ),
+                          backgroundColor: [
+                            "#22c55e",
+                            "#3b82f6",
+                            "#eab308",
+                            "#f97316",
+                            "#ef4444",
+                          ],
+                          borderWidth: 1,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: {
+                          position: "right" as const,
+                        },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* SKOR RATA-RATA SURVEI (6 KATEGORI) */}
+              <div className="rounded-xl border border-border bg-white p-6 shadow-sm dark:bg-darkmode-light dark:border-darkmode-border">
+                <h3 className="h6 mb-6 text-center">Skor Rata-rata Survei</h3>
+                <div className="h-64">
+                  <Bar
+                    data={{
+                      labels: [
+                        "ZI",
+                        "Pelayanan",
+                        "Akademik",
+                        "Sarpras",
+                        "Manajemen",
+                        "Budaya",
+                      ],
+                      datasets: [
+                        {
+                          label: "Skor",
+                          data: [
+                            data.charts.survey_avg?.zi || 0,
+                            data.charts.survey_avg?.service || 0,
+                            data.charts.survey_avg?.academic || 0,
+                            data.charts.survey_avg?.facilities || 0,
+                            data.charts.survey_avg?.management || 0,
+                            data.charts.survey_avg?.culture || 0,
+                          ],
+                          backgroundColor: [
+                            "#3b82f6",
+                            "#10b981",
+                            "#8b5cf6",
+                            "#f59e0b",
+                            "#ef4444",
+                            "#14b8a6",
+                          ],
+                          borderRadius: 6,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: { y: { min: 0, max: 5 } },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. CONTENT MANAGER (NEW) */}
+          {activeTab === "content" &&
+            (userRole === "operator" || userRole === "super_admin") && (
+              <div className="grid grid-cols-1 gap-6">
+                {/* Top Bar Actions */}
+                <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white dark:bg-darkmode-light p-4 rounded-xl border border-border dark:border-darkmode-border">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setContentTab("article")}
+                      className={`btn btn-sm ${contentTab === "article" ? "btn-primary" : "btn-outline-primary"}`}
+                    >
+                      <FaFileAlt className="mr-2" /> Artikel (.mdx)
+                    </button>
+                    <button
+                      onClick={() => setContentTab("image")}
+                      className={`btn btn-sm ${contentTab === "image" ? "btn-primary" : "btn-outline-primary"}`}
+                    >
+                      <FaImages className="mr-2" /> Gambar
+                    </button>
+                    <button
+                      onClick={() => setContentTab("video")}
+                      className={`btn btn-sm ${contentTab === "video" ? "btn-primary" : "btn-outline-primary"}`}
+                    >
+                      <FaVideo className="mr-2" /> Video
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2 items-center">
+                    {contentTab === "article" && (
+                      <a
+                        href="/template.mdx"
+                        download
+                        className="text-sm text-primary hover:underline flex items-center gap-1 mr-2"
+                      >
+                        <FaDownload /> Unduh Template
+                      </a>
+                    )}
+
+                    <label className="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white border-none cursor-pointer flex items-center gap-2">
+                      <FaCloudUploadAlt /> Upload{" "}
+                      {contentTab === "article"
+                        ? "Artikel"
+                        : contentTab === "image"
+                          ? "Gambar"
+                          : "Video"}
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept={
+                          contentTab === "article"
+                            ? ".md,.mdx"
+                            : contentTab === "image"
+                              ? "image/*"
+                              : "video/*"
+                        }
+                        onChange={(e) => handleContentUpload(e)}
+                      />
+                    </label>
+
+                    {userRole === "super_admin" && (
+                      <button
+                        onClick={triggerRebuild}
+                        disabled={isRebuilding}
+                        className="btn btn-sm bg-purple-600 hover:bg-purple-700 text-white border-none flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <FaHammer
+                          className={isRebuilding ? "animate-spin" : ""}
+                        />{" "}
+                        {isRebuilding ? "Building..." : "Rebuild"}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                {/* File List */}
+                <div className="bg-white dark:bg-darkmode-light rounded-xl border border-border dark:border-darkmode-border overflow-hidden">
+                  <div className="p-4 bg-gray-50 dark:bg-white/5 border-b border-border dark:border-darkmode-border flex justify-between items-center">
+                    <h3 className="font-bold flex items-center gap-2">
+                      File Manager: {contentTab.toUpperCase()}
+                      <span className="text-xs font-normal text-gray-500 bg-gray-200 px-2 py-0.5 rounded-full">
+                        {fileList.length} files
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => setRefreshTrigger((prev) => prev + 1)}
+                      className="text-gray-500 hover:text-primary"
+                    >
+                      <FaSyncAlt />
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto max-h-[500px]">
+                    <table className="w-full text-left text-sm">
+                      <thead className="bg-gray-100 dark:bg-black/20 sticky top-0 z-10">
+                        <tr>
+                          <th className="px-4 py-3">Nama File</th>
+                          <th className="px-4 py-3">Ukuran</th>
+                          <th className="px-4 py-3">Tanggal Upload</th>
+                          <th className="px-4 py-3 text-right">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border dark:divide-darkmode-border">
+                        {fileList.length === 0 ? (
+                          <tr>
+                            <td
+                              colSpan={4}
+                              className="p-8 text-center text-gray-500"
+                            >
+                              Folder kosong.
+                            </td>
+                          </tr>
+                        ) : (
+                          fileList.map((file, idx) => (
+                            <tr
+                              key={idx}
+                              className="hover:bg-gray-50 dark:hover:bg-white/5"
+                            >
+                              <td className="px-4 py-3 font-medium flex items-center gap-2">
+                                {file.url ? (
+                                  <a
+                                    href={file.url}
+                                    target="_blank"
+                                    className="text-primary hover:underline truncate max-w-[200px] md:max-w-md block"
+                                    rel="noreferrer"
+                                  >
+                                    {file.name}{" "}
+                                    <FaExternalLinkAlt className="inline text-[10px] ml-1" />
+                                  </a>
+                                ) : (
+                                  <span className="truncate max-w-[200px] md:max-w-md block">
+                                    {file.name}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-gray-500">
+                                {file.size}
+                              </td>
+                              <td className="px-4 py-3 text-gray-500">
+                                {file.date}
+                              </td>
+                              <td className="px-4 py-3 text-right flex justify-end gap-2">
+                                {/* View/Download Button */}
+                                {userRole === "super_admin" && (
+                                  <a
+                                    href={
+                                      file.url ||
+                                      `/api/content.php?action=download&type=${contentTab}&file=${file.name}`
+                                    }
+                                    target="_blank"
+                                    className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                    title={
+                                      contentTab === "article"
+                                        ? "Unduh / Tinjau Source"
+                                        : "Lihat Media"
+                                    }
+                                  >
+                                    {contentTab === "article" ? (
+                                      <FaSearchPlus />
+                                    ) : (
+                                      <FaEye />
+                                    )}
+                                  </a>
+                                )}
+
+                                {/* Delete Button (Super Admin Only) */}
+                                {userRole === "super_admin" && (
+                                  <button
+                                    onClick={() => deleteContent(file.name)}
+                                    className="p-2 text-red-600 hover:bg-red-50 rounded"
+                                    title="Hapus"
+                                  >
+                                    <FaTrash />
+                                  </button>
+                                )}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          {/* 3. USER MANAGEMENT (SUPER ADMIN ONLY) */}
+          {activeTab === "users" && userRole === "super_admin" && (
+            <div className="bg-white dark:bg-darkmode-light rounded-xl border border-border dark:border-darkmode-border overflow-hidden">
+              <div className="p-6 border-b border-border dark:border-darkmode-border flex justify-between items-center">
+                <h3 className="text-lg font-bold">Daftar Pengguna</h3>
                 <button
-                  onClick={handleUpdatePengaduan}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex-1"
+                  onClick={fetchUsers}
+                  className="text-sm text-primary hover:underline"
                 >
-                  Update
+                  Refresh Data
                 </button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-gray-50 dark:bg-white/5 uppercase text-xs">
+                    <tr>
+                      <th className="px-6 py-3">User</th>
+                      <th className="px-6 py-3">Role</th>
+                      <th className="px-6 py-3">Status</th>
+                      <th className="px-6 py-3">Terdaftar</th>
+                      <th className="px-6 py-3 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border dark:divide-darkmode-border">
+                    {userList.map((u) => (
+                      <tr key={u.id}>
+                        <td className="px-6 py-4">
+                          <div className="font-bold">{u.name}</div>
+                          <div className="text-xs text-gray-500">{u.email}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${u.role === "super_admin" ? "bg-red-100 text-red-700" : u.role === "operator" ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-700"}`}
+                          >
+                            {u.role}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2 py-1 rounded text-xs font-bold ${u.status === "active" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}
+                          >
+                            {u.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-gray-500">
+                          {formatDateIndo(u.created_at)}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <div className="flex justify-center gap-2">
+                            <button
+                              onClick={() =>
+                                setEditUserModal({ isOpen: true, user: u })
+                              }
+                              className="p-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+                              title="Edit Role/Status"
+                            >
+                              <FaUserEdit />
+                            </button>
+                            {u.role !== "super_admin" && (
+                              <button
+                                onClick={() =>
+                                  setConfirmModal({
+                                    isOpen: true,
+                                    ids: [u.id],
+                                    type: "user",
+                                    count: 1,
+                                    action: () => deleteUser(u.id),
+                                  })
+                                }
+                                className="p-2 bg-red-50 text-red-600 rounded hover:bg-red-100"
+                                title="Hapus User"
+                              >
+                                <FaTrash />
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* 4. POSTS (STATS) */}
+          {activeTab === "posts" && (
+            <DataTable
+              title="Statistik Artikel Populer"
+              data={data.tables.posts}
+              enableSelection={false}
+              onDownload={() => downloadReport("posts")}
+              columns={[
+                {
+                  key: "slug",
+                  label: "Judul Artikel",
+                  render: (val: string) => {
+                    const urlSlug = val.replace(/_/g, "-");
+                    const displayTitle = val.replace(/_/g, " ").toUpperCase();
+                    return (
+                      <a
+                        href={`/blog/${urlSlug}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline font-medium flex items-center gap-1 group"
+                      >
+                        {displayTitle}
+                        <FaExternalLinkAlt className="text-[10px] opacity-50 group-hover:opacity-100" />
+                      </a>
+                    );
+                  },
+                },
+                {
+                  key: "views",
+                  label: "Jumlah Pembaca",
+                  sortable: true,
+                  className: "text-right font-bold",
+                },
+              ]}
+            />
+          )}
+          {/* TAB BARU: VISIT HISTORY */}
+          {activeTab === "visits" && (
+            <DataTable
+              title="Riwayat Kunjungan Website"
+              data={filteredVisits}
+              searchKeys={["ip_address", "user_agent"]}
+              enableSelection={false}
+              onDownload={() => downloadReport("visits")}
+              customFilters={
+                <div className="flex items-center gap-2 border border-border rounded-lg px-2 py-1.5 bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+                  <FaCalendarAlt className="text-gray-400" />
+                  <select
+                    className="text-xs bg-transparent outline-none"
+                    value={fbFilterMonth}
+                    onChange={(e) => setFbFilterMonth(Number(e.target.value))}
+                  >
+                    {monthOptions.map((m, i) => (
+                      <option key={i} value={i}>
+                        {m}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    className="text-xs bg-transparent outline-none border-l border-gray-200 pl-2 ml-1"
+                    value={fbFilterYear}
+                    onChange={(e) => setFbFilterYear(Number(e.target.value))}
+                  >
+                    <option value={0}>Semua Tahun</option>
+                    {yearOptions.slice(1).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              }
+              columns={[
+                {
+                  key: "created_at",
+                  label: "Waktu Akses",
+                  sortable: true,
+                  className: "w-48 text-sm text-gray-500",
+                  render: (val: string) => formatDateIndo(val),
+                },
+                {
+                  key: "ip_address",
+                  label: "IP Address",
+                  sortable: true,
+                  className: "font-mono text-xs w-32",
+                },
+                {
+                  key: "user_agent",
+                  label: "Perangkat / Browser",
+                  render: (val: string) => (
+                    <div className="flex items-center gap-2" title={val}>
+                      <FaDesktop className="text-gray-400 flex-shrink-0" />
+                      <span className="text-xs text-gray-600 dark:text-gray-300 truncate max-w-md block">
+                        {val}
+                      </span>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+          )}
+          {/* 5. FEEDBACK (DATA ULASAN) */}
+          {activeTab === "feedback" && (
+            <DataTable
+              title="Data Ulasan Masuk"
+              data={filteredFeedbacks}
+              searchKeys={["name", "message"]}
+              enableSelection={userRole === "super_admin"}
+              onBulkDelete={(ids: any) => requestDelete(ids, "feedback")}
+              onDownload={() => downloadReport("feedback")}
+              customFilters={
+                <div className="flex flex-wrap gap-2 items-center mb-2 md:mb-0">
+                  <div className="flex items-center gap-2 border border-border rounded-lg px-2 py-1.5 bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+                    <FaCalendarAlt className="text-gray-400" />
+                    <select
+                      className="text-xs bg-transparent outline-none"
+                      value={fbFilterMonth}
+                      onChange={(e) => setFbFilterMonth(Number(e.target.value))}
+                    >
+                      {monthOptions.map((m, i) => (
+                        <option key={i} value={i}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="text-xs bg-transparent outline-none border-l border-gray-200 pl-2 ml-1"
+                      value={fbFilterYear}
+                      onChange={(e) => setFbFilterYear(Number(e.target.value))}
+                    >
+                      <option value={0}>Semua Tahun</option>
+                      {yearOptions.slice(1).map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 border border-border rounded-lg px-2 py-1.5 bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+                    <FaStar className="text-yellow-400" />
+                    <select
+                      className="text-xs bg-transparent outline-none"
+                      value={fbFilterRating}
+                      onChange={(e) =>
+                        setFbFilterRating(Number(e.target.value))
+                      }
+                    >
+                      <option value={0}>Semua Rating</option>
+                      {[5, 4, 3, 2, 1].map((r) => (
+                        <option key={r} value={r}>
+                          {r} Bintang
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              }
+              columns={[
+                {
+                  key: "created_at",
+                  label: "Waktu",
+                  sortable: true,
+                  className: "w-48 text-sm text-gray-500",
+                  render: (val: string) => formatDateIndo(val),
+                },
+                {
+                  key: "name",
+                  label: "Nama Pengirim",
+                  sortable: true,
+                  className: "font-medium w-48",
+                },
+                {
+                  key: "rating",
+                  label: "Rating",
+                  sortable: true,
+                  className: "w-24",
+                  render: (val: number) => (
+                    <span className="inline-block px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs font-bold">
+                      {val} ✯
+                    </span>
+                  ),
+                },
+                {
+                  key: "message",
+                  label: "Pesan / Kritik",
+                  render: (val: string, row: any) => (
+                    <div className="group relative">
+                      <p className="italic text-gray-600 dark:text-gray-400 line-clamp-1 max-w-xs">
+                        {val || "-"}
+                      </p>
+                      {val && val.length > 50 && (
+                        <button
+                          onClick={() => openDetail(row, "feedback")}
+                          className="text-xs text-primary hover:underline mt-1 flex items-center gap-1"
+                        >
+                          Lihat Detail{" "}
+                          <FaExternalLinkAlt className="text-[10px]" />
+                        </button>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "Aksi",
+                  className: "text-center w-16",
+                  render: (_: any, row: any) =>
+                    userRole === "super_admin" && (
+                      <button
+                        onClick={() => requestDelete([row.id], "feedback")}
+                        className="text-red-500 hover:text-red-700 p-2 transition-colors hover:bg-red-50 rounded-full"
+                        title="Hapus Data"
+                      >
+                        <FaTrash size={14} />
+                      </button>
+                    ),
+                },
+              ]}
+            />
+          )}
+
+          {/* 6. SURVEY (DATA SURVEI) - UPDATED 6 COLS */}
+          {activeTab === "surveys" && (
+            <DataTable
+              title="Data Survei Kepuasan"
+              data={filteredSurveys}
+              searchKeys={["respondent_name", "feedback"]}
+              enableSelection={userRole === "super_admin"}
+              onBulkDelete={(ids: any) => requestDelete(ids, "survey")}
+              onDownload={() => downloadReport("survey")}
+              customFilters={
+                <div className="flex flex-wrap gap-2 items-center mb-2 md:mb-0">
+                  <div className="flex items-center gap-2 border border-border rounded-lg px-2 py-1.5 bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+                    <FaCalendarAlt className="text-gray-400" />
+                    <select
+                      className="text-xs bg-transparent outline-none"
+                      value={svFilterMonth}
+                      onChange={(e) => setSvFilterMonth(Number(e.target.value))}
+                    >
+                      {monthOptions.map((m, i) => (
+                        <option key={i} value={i}>
+                          {m}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      className="text-xs bg-transparent outline-none border-l border-gray-200 pl-2 ml-1"
+                      value={svFilterYear}
+                      onChange={(e) => setSvFilterYear(Number(e.target.value))}
+                    >
+                      <option value={0}>Semua Tahun</option>
+                      {yearOptions.slice(1).map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 border border-border rounded-lg px-2 py-1.5 bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+                    <FaFilter className="text-blue-400" />
+                    <select
+                      className="text-xs bg-transparent outline-none"
+                      value={svFilterCategory}
+                      onChange={(e) => setSvFilterCategory(e.target.value)}
+                    >
+                      <option value="all">Semua Kategori</option>
+                      <option value="zi">Zona Integritas (ZI)</option>
+                      <option value="service">Pelayanan</option>
+                      <option value="academic">Akademik</option>
+                      <option value="facilities">Sarpras</option>
+                      <option value="management">Manajemen</option>
+                      <option value="culture">Budaya</option>
+                    </select>
+                    <select
+                      className="text-xs bg-transparent outline-none border-l border-gray-200 pl-2 ml-1"
+                      value={svFilterScore}
+                      onChange={(e) => setSvFilterScore(Number(e.target.value))}
+                    >
+                      <option value={0}>Semua Nilai</option>
+                      {[5, 4, 3, 2, 1].map((s) => (
+                        <option key={s} value={s}>
+                          Nilai {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              }
+              columns={[
+                {
+                  key: "created_at",
+                  label: "Waktu",
+                  sortable: true,
+                  className: "w-32 text-xs text-gray-500",
+                  render: (val: string) => formatDateIndo(val),
+                },
+                {
+                  key: "respondent_name",
+                  label: "Responden",
+                  sortable: true,
+                  className: "w-40",
+                  render: (_: any, row: any) => (
+                    <div>
+                      <div className="font-bold text-sm">
+                        {row.respondent_name}
+                      </div>
+                      <div className="text-[10px] text-gray-500">
+                        {row.respondent_role}
+                      </div>
+                    </div>
+                  ),
+                },
+                {
+                  key: "score_zi",
+                  label: "ZI",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "score_service",
+                  label: "LYN",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "score_academic",
+                  label: "AKD",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "score_facilities",
+                  label: "SAR",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "score_management",
+                  label: "MGT",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "score_culture",
+                  label: "BUD",
+                  className: "text-center w-10 text-xs font-bold",
+                },
+                {
+                  key: "feedback",
+                  label: "Masukan",
+                  render: (val: string, row: any) => (
+                    <div>
+                      <p className="italic text-gray-500 text-xs line-clamp-1 max-w-xs">
+                        {val || "-"}
+                      </p>
+                      {val && val.length > 30 && (
+                        <button
+                          onClick={() => openDetail(row, "survey")}
+                          className="text-[10px] text-primary hover:underline mt-1 flex items-center gap-1"
+                        >
+                          Lihat <FaExternalLinkAlt className="text-[8px]" />
+                        </button>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  key: "actions",
+                  label: "Aksi",
+                  className: "text-center w-10",
+                  render: (_: any, row: any) =>
+                    userRole === "super_admin" && (
+                      <button
+                        onClick={() => requestDelete([row.id], "survey")}
+                        className="text-red-500 hover:text-red-700 p-1.5 transition-colors hover:bg-red-50 rounded-full"
+                        title="Hapus Data"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    ),
+                },
+              ]}
+            />
+          )}
+        </div>
+      )}
+
+      {/* --- MODALS --- */}
+
+      {/* Conflict Modal */}
+      {uploadConflict.isOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-darkmode-body w-full max-w-sm rounded-xl shadow-2xl p-6 border border-gray-100 dark:border-darkmode-border">
+            <h3 className="text-lg font-bold mb-2">Konflik File</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              File dengan nama yang sama sudah ada. Apa yang ingin Anda lakukan?
+            </p>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() =>
+                  handleContentUpload(
+                    { target: { files: [uploadConflict.file] } } as any,
+                    "overwrite",
+                  )
+                }
+                className="btn btn-primary w-full bg-red-600 border-red-600"
+              >
+                Timpa (Overwrite)
+              </button>
+              <button
+                onClick={() =>
+                  handleContentUpload(
+                    { target: { files: [uploadConflict.file] } } as any,
+                    "rename",
+                  )
+                }
+                className="btn btn-primary w-full"
+              >
+                Ganti Nama (Rename)
+              </button>
+              <button
+                onClick={() =>
+                  setUploadConflict({ isOpen: false, file: null, type: "" })
+                }
+                className="btn btn-outline-primary w-full"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Import Modal */}
+      <ImportModal
+        isOpen={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onSuccess={() => {
+          fetchStats();
+          setImportModalOpen(false);
+        }}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmationModal
+        isOpen={confirmModal.isOpen}
+        title="Konfirmasi Hapus"
+        message={`Yakin ingin menghapus ${confirmModal.count} data terpilih?`}
+        onConfirm={executeDelete}
+        onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+      />
+
+      {/* Status Modal (Success/Fail Delete) */}
+      <StatusModal
+        isOpen={statusModal.isOpen}
+        status={statusModal.status}
+        title={statusModal.title}
+        message={statusModal.message}
+        onClose={() => setStatusModal({ ...statusModal, isOpen: false })}
+      />
+
+      {/* Edit User Modal */}
+      {editUserModal.isOpen && editUserModal.user && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-darkmode-body w-full max-w-sm rounded-xl p-6 shadow-xl">
+            <h3 className="text-lg font-bold mb-4">
+              Edit User: {editUserModal.user.name}
+            </h3>
+            <div className="mb-4">
+              <label className="block text-sm mb-1">Role</label>
+              <select
+                id="editRole"
+                defaultValue={editUserModal.user.role}
+                className="w-full border p-2 rounded bg-gray-50 dark:bg-white/10 dark:text-white"
+              >
+                <option value="user">User (View Only)</option>
+                <option value="operator">Operator (View + Export)</option>
+                <option value="super_admin">Super Admin (Full Access)</option>
+              </select>
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm mb-1">Status</label>
+              <select
+                id="editStatus"
+                defaultValue={editUserModal.user.status}
+                className="w-full border p-2 rounded bg-gray-50 dark:bg-white/10 dark:text-white"
+              >
+                <option value="active">Active</option>
+                <option value="inactive">Inactive (Banned)</option>
+                <option value="unverified">Unverified</option>
+              </select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setEditUserModal({ isOpen: false, user: null })}
+                className="btn btn-outline-primary btn-sm"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => {
+                  const role = (
+                    document.getElementById("editRole") as HTMLSelectElement
+                  ).value;
+                  const status = (
+                    document.getElementById("editStatus") as HTMLSelectElement
+                  ).value;
+                  updateUser(editUserModal.user!.id, role, status);
+                }}
+                className="btn btn-primary btn-sm"
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white dark:bg-darkmode-body w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden border border-gray-100 dark:border-darkmode-border transform transition-all scale-100">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 dark:border-darkmode-border bg-gray-50 dark:bg-white/5">
+              <div>
+                <h3 className="text-lg font-bold text-gray-800 dark:text-white">
+                  Detail{" "}
+                  {modalType === "feedback" ? "Ulasan" : "Masukan Survei"}
+                </h3>
+                <p className="text-xs text-gray-500 mt-1">
+                  {formatDateIndo(selectedItem.created_at)}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedItem(null);
+                  setModalType(null);
+                }}
+                className="text-gray-400 hover:text-red-500 bg-white dark:bg-white/10 p-2 rounded-full shadow-sm"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="h-12 w-12 flex-shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
+                  {(selectedItem.name || selectedItem.respondent_name || "A")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+                <div>
+                  <p className="font-bold text-lg text-gray-800 dark:text-white">
+                    {selectedItem.name || selectedItem.respondent_name}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {selectedItem.respondent_role || "Pengunjung / Wali Murid"}
+                  </p>
+                  {modalType === "feedback" && (
+                    <div className="mt-2 flex gap-1">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <FaStar
+                          key={s}
+                          className={
+                            s <= selectedItem.rating
+                              ? "text-yellow-400"
+                              : "text-gray-200"
+                          }
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="relative rounded-xl bg-gray-50 dark:bg-white/5 p-6 border border-gray-100 dark:border-darkmode-border">
+                <FaQuoteLeft className="absolute top-4 left-4 text-gray-200 dark:text-gray-600 text-2xl" />
+                <div className="relative z-10">
+                  <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                    Isi Pesan:
+                  </p>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                    {modalType === "feedback"
+                      ? selectedItem.message
+                      : selectedItem.feedback}
+                  </p>
+                </div>
+              </div>
+              {modalType === "survey" && (
+                <div className="grid grid-cols-3 gap-2 mt-4 text-xs">
+                  <div className="p-2 bg-blue-50 rounded text-center dark:bg-blue-900/20">
+                    <div className="font-bold text-blue-700 dark:text-blue-400">
+                      ZI
+                    </div>
+                    {selectedItem.score_zi}
+                  </div>
+                  <div className="p-2 bg-green-50 rounded text-center dark:bg-green-900/20">
+                    <div className="font-bold text-green-700 dark:text-green-400">
+                      LYN
+                    </div>
+                    {selectedItem.score_service}
+                  </div>
+                  <div className="p-2 bg-purple-50 rounded text-center dark:bg-purple-900/20">
+                    <div className="font-bold text-purple-700 dark:text-purple-400">
+                      AKD
+                    </div>
+                    {selectedItem.score_academic}
+                  </div>
+                  <div className="p-2 bg-yellow-50 rounded text-center dark:bg-yellow-900/20">
+                    <div className="font-bold text-yellow-700 dark:text-yellow-400">
+                      SAR
+                    </div>
+                    {selectedItem.score_facilities}
+                  </div>
+                  <div className="p-2 bg-red-50 rounded text-center dark:bg-red-900/20">
+                    <div className="font-bold text-red-700 dark:text-red-400">
+                      MGT
+                    </div>
+                    {selectedItem.score_management}
+                  </div>
+                  <div className="p-2 bg-teal-50 rounded text-center dark:bg-teal-900/20">
+                    <div className="font-bold text-teal-700 dark:text-teal-400">
+                      BUD
+                    </div>
+                    {selectedItem.score_culture}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="bg-gray-50 dark:bg-white/5 px-6 py-4 flex justify-between items-center text-xs text-gray-400 border-t border-gray-100 dark:border-darkmode-border">
+              <span>IP: {selectedItem.ip_address}</span>
+              <div className="flex gap-2">
+                {userRole === "super_admin" && (
+                  <button
+                    onClick={() => requestDelete([selectedItem.id], modalType!)}
+                    className="btn bg-red-100 text-red-600 hover:bg-red-200 border-transparent btn-sm flex items-center gap-2"
+                  >
+                    <FaTrash /> Hapus
+                  </button>
+                )}
                 <button
-                  onClick={() => setEditModalOpen(false)}
-                  className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setModalType(null);
+                  }}
+                  className="btn btn-primary btn-sm"
                 >
-                  Cancel
+                  Tutup
                 </button>
               </div>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// --- SUB COMPONENTS ---
+
+// 1. STATUS MODAL (NEW)
+const StatusModal = ({ isOpen, status, title, message, onClose }: any) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-darkmode-body w-full max-w-sm rounded-xl shadow-2xl p-6 text-center border border-gray-100 dark:border-darkmode-border">
+        <div
+          className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${status === "success" ? "bg-green-100 dark:bg-green-900/30 text-green-600" : "bg-red-100 dark:bg-red-900/30 text-red-600"}`}
+        >
+          {status === "success" ? (
+            <FaCheckCircle className="text-4xl animate-bounce" />
+          ) : (
+            <FaTimesCircle className="text-4xl" />
+          )}
+        </div>
+        <h3 className="text-xl font-bold mb-2 text-gray-800 dark:text-white">
+          {title}
+        </h3>
+        <p className="text-gray-500 mb-6 text-sm">{message}</p>
+        <button onClick={onClose} className="btn btn-primary w-full">
+          OK, Mengerti
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// 2. CONFIRMATION MODAL
+const ConfirmationModal = ({
+  isOpen,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+}: any) => {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-darkmode-body w-full max-w-sm rounded-xl shadow-2xl p-6 border border-gray-100 dark:border-darkmode-border">
+        <div className="text-center">
+          <div className="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4 text-red-600">
+            <FaExclamationCircle className="text-3xl" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+            {title}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
+            {message}
+          </p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-lg text-sm font-medium"
+            >
+              Batal
+            </button>
+            <button
+              onClick={onConfirm}
+              className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-medium shadow-md shadow-red-200"
+            >
+              Ya, Hapus
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 3. STAT CARD
+const StatCard = ({ label, value, icon, color, bg }: any) => (
+  <div className="flex items-center justify-between rounded-xl border border-border bg-white p-6 shadow-sm transition-all hover:shadow-md dark:bg-darkmode-light dark:border-darkmode-border">
+    <div>
+      <p className="text-sm font-medium text-text-light">{label}</p>
+      <p className="mt-2 text-3xl font-bold text-text-dark dark:text-white">
+        {value}
+      </p>
+    </div>
+    <div
+      className={`flex h-12 w-12 items-center justify-center rounded-lg ${bg} text-xl ${color}`}
+    >
+      {icon}
+    </div>
+  </div>
+);
+
+// 4. IMPORT MODAL
+const ImportModal = ({ isOpen, onClose, onSuccess }: any) => {
+  const [importType, setImportType] = useState<
+    "feedback" | "survey" | "visits"
+  >("feedback");
+  const [file, setFile] = useState<File | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "success" | "error"
+  >("idle");
+  const [progress, setProgress] = useState(0);
+  const [resultMessage, setResultMessage] = useState("");
+  const [countdown, setCountdown] = useState(5);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setUploadStatus("idle");
+      setProgress(0);
+      setFile(null);
+      setResultMessage("");
+      setCountdown(5);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (uploadStatus === "success" && countdown > 0) {
+      timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
+    } else if (uploadStatus === "success" && countdown === 0) {
+      window.location.reload();
+    }
+    return () => clearTimeout(timer);
+  }, [uploadStatus, countdown]);
+
+  if (!isOpen) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setProgress(0);
+      setResultMessage("");
+    }
+  };
+
+  const handleUpload = () => {
+    if (!file) return;
+    setUploadStatus("uploading");
+    setProgress(0);
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", importType);
+    const xhr = new XMLHttpRequest();
+    xhr.upload.addEventListener("progress", (event) => {
+      if (event.lengthComputable)
+        setProgress(Math.round((event.loaded / event.total) * 100));
+    });
+    xhr.addEventListener("load", () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const json = JSON.parse(xhr.responseText);
+          if (json.status === "success") {
+            setUploadStatus("success");
+            setResultMessage(json.message);
+          } else {
+            setUploadStatus("error");
+            setResultMessage(json.message || "Gagal mengupload file.");
+          }
+        } catch (e) {
+          setUploadStatus("error");
+          setResultMessage("Format respon server tidak valid.");
+        }
+      } else {
+        setUploadStatus("error");
+        setResultMessage(`Terjadi kesalahan server (Code: ${xhr.status}).`);
+      }
+    });
+    xhr.addEventListener("error", () => {
+      setUploadStatus("error");
+      setResultMessage("Terjadi kesalahan jaringan.");
+    });
+    xhr.open("POST", "/api/import.php?action=import");
+    xhr.send(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-darkmode-body w-full max-w-md rounded-xl shadow-2xl overflow-hidden border border-gray-100 dark:border-darkmode-border transition-all duration-300">
+        {uploadStatus === "idle" && (
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-bold">Import Data CSV</h3>
+              <button onClick={onClose}>
+                <FaTimes className="text-gray-400 hover:text-red-500" />
+              </button>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Pilih Tipe Data
+              </label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="importType"
+                    value="feedback"
+                    checked={importType === "feedback"}
+                    onChange={() => setImportType("feedback")}
+                  />
+                  Data Ulasan
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="importType"
+                    value="survey"
+                    checked={importType === "survey"}
+                    onChange={() => setImportType("survey")}
+                  />
+                  Data Survei
+                </label>
+                {/* Opsi Baru */}
+                <label className="flex items-center gap-2 cursor-pointer mt-1">
+                  <input
+                    type="radio"
+                    name="importType"
+                    value="visits"
+                    checked={importType === "visits"}
+                    onChange={() => setImportType("visits")}
+                  />
+                  Data Kunjungan
+                </label>
+              </div>
+            </div>
+            <div className="mb-6">
+              <label className="block text-sm font-medium mb-2">
+                Upload File
+              </label>
+              <div
+                className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-white/5 transition-colors group"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  type="file"
+                  accept=".csv"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileChange}
+                />
+                {file ? (
+                  <div className="flex flex-col items-center justify-center gap-2 text-green-600 font-medium animate-fade-in">
+                    <FaFileCsv size={32} />
+                    <span className="truncate max-w-[200px] text-sm">
+                      {file.name}
+                    </span>
+                    <span className="text-xs text-gray-400 font-normal">
+                      Klik untuk ganti file
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-gray-500 group-hover:text-primary transition-colors">
+                    <FaFileUpload className="mx-auto mb-2 text-2xl" />
+                    <p>Klik untuk memilih file CSV</p>
+                  </div>
+                )}
+              </div>
+              <div className="mt-2 text-right">
+                <a
+                  href={`/api/import.php?action=template&type=${importType}`}
+                  className="text-xs text-primary hover:underline flex items-center justify-end gap-1"
+                >
+                  <FaDownload /> Download Template CSV
+                </a>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={onClose}
+                className="btn btn-outline-primary btn-sm"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleUpload}
+                className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!file}
+              >
+                Mulai Import
+              </button>
+            </div>
+          </div>
+        )}
+        {uploadStatus === "uploading" && (
+          <div className="p-8 text-center animate-fade-in">
+            <div className="mb-4">
+              <FaSpinner className="mx-auto text-4xl text-primary animate-spin" />
+            </div>
+            <h3 className="text-lg font-bold mb-2">Mengupload Data...</h3>
+            <p className="text-sm text-gray-500 mb-6">
+              Mohon jangan tutup halaman ini.
+            </p>
+            <div className="w-full bg-gray-200 rounded-full h-4 dark:bg-gray-700 overflow-hidden relative">
+              <div
+                className="bg-primary h-4 rounded-full transition-all duration-300 ease-out flex items-center justify-center"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs mt-2 font-mono text-gray-600 dark:text-gray-400">
+              <span>{progress}%</span>
+              <span>100%</span>
+            </div>
+            {progress === 100 && (
+              <p className="text-xs text-orange-500 mt-4 animate-pulse">
+                Validasi & Insert Database sedang berjalan...
+              </p>
+            )}
+          </div>
+        )}
+        {uploadStatus === "success" && (
+          <div className="p-8 text-center animate-fade-in">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+              <FaCheckCircle className="text-5xl text-green-600 dark:text-green-400 animate-bounce" />
+            </div>
+            <h3 className="text-xl font-bold text-green-700 dark:text-green-400 mb-2">
+              Import Berhasil!
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-6">
+              {resultMessage}
+            </p>
+            <div className="p-4 bg-gray-50 dark:bg-white/5 rounded-lg border border-gray-100 dark:border-darkmode-border">
+              <p className="text-sm text-gray-500">
+                Halaman akan dimuat ulang dalam{" "}
+                <span className="font-bold text-dark dark:text-white">
+                  {countdown}
+                </span>{" "}
+                detik.
+              </p>
+            </div>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-6 btn btn-primary w-full"
+            >
+              Muat Ulang Sekarang
+            </button>
+          </div>
+        )}
+        {uploadStatus === "error" && (
+          <div className="p-8 text-center animate-fade-in">
+            <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+              <FaTimesCircle className="text-5xl text-red-600 dark:text-red-400" />
+            </div>
+            <h3 className="text-xl font-bold text-red-700 dark:text-red-400 mb-2">
+              Import Gagal
+            </h3>
+            <div className="bg-red-50 dark:bg-red-900/10 p-4 rounded-lg border border-red-100 dark:border-red-900/30 mb-6 overflow-y-auto max-h-40">
+              <p className="text-sm text-red-600 dark:text-red-300 break-words">
+                {resultMessage}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="btn btn-outline-primary w-full"
+              >
+                Tutup
+              </button>
+              <button
+                onClick={() => setUploadStatus("idle")}
+                className="btn btn-primary w-full"
+              >
+                Coba Lagi
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// 5. DATA TABLE
+const DataTable = ({
+  title,
+  data,
+  columns,
+  searchKeys = ["slug"],
+  onDownload,
+  enableSelection = false,
+  onBulkDelete,
+  customFilters,
+}: any) => {
+  const [search, setSearch] = useState("");
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [data, currentPage, search]);
+
+  const filteredData = useMemo(() => {
+    if (!search) return data;
+    return data.filter((row: any) =>
+      searchKeys.some((key: any) =>
+        String(row[key] || "")
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      ),
+    );
+  }, [data, search, searchKeys]);
+
+  const sortedData = useMemo(() => {
+    if (!sortConfig) return filteredData;
+    return [...filteredData].sort((a, b) => {
+      let aVal = a[sortConfig.key];
+      let bVal = b[sortConfig.key];
+      if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredData, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
+  const paginatedData = sortedData.slice(
+    (currentPage - 1) * rowsPerPage,
+    currentPage * rowsPerPage,
+  );
+
+  const requestSort = (key: string) => {
+    setSortConfig({
+      key,
+      direction:
+        sortConfig?.key === key && sortConfig.direction === "asc"
+          ? "desc"
+          : "asc",
+    });
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const currentIds = paginatedData.map((row: any) => row.id);
+      setSelectedIds(currentIds);
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectRow = (id: number) => {
+    if (selectedIds.includes(id)) {
+      setSelectedIds(selectedIds.filter((sid) => sid !== id));
+    } else {
+      setSelectedIds([...selectedIds, id]);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden dark:bg-darkmode-light dark:border-darkmode-border">
+      <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between border-b border-border dark:border-darkmode-border bg-gray-50 dark:bg-white/5">
+        <div className="flex items-center gap-3">
+          <h3 className="text-lg font-bold">{title}</h3>
+          {enableSelection && selectedIds.length > 0 && (
+            <button
+              onClick={() => onBulkDelete && onBulkDelete(selectedIds)}
+              className="px-3 py-1 bg-red-100 text-red-600 hover:bg-red-200 rounded text-xs font-bold flex items-center gap-2 animate-fade-in transition-all"
+            >
+              <FaTrash /> Hapus ({selectedIds.length})
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+          {customFilters}
+          <div className="relative">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Cari data..."
+              className="w-full rounded-lg border border-border py-2 pl-9 pr-4 text-sm focus:border-primary focus:outline-none dark:bg-darkmode-body dark:border-darkmode-border"
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+          <button
+            onClick={onDownload}
+            className="btn btn-primary btn-sm flex items-center justify-center gap-2 bg-green-600 border-green-600 hover:bg-green-700"
+          >
+            <FaDownload /> Excel
+          </button>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-gray-100 text-xs uppercase text-gray-500 dark:bg-black/20">
+            <tr>
+              {enableSelection && (
+                <th className="px-4 py-3 w-10 text-center">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                      onChange={handleSelectAll}
+                      checked={
+                        paginatedData.length > 0 &&
+                        paginatedData.every((row: any) =>
+                          selectedIds.includes(row.id),
+                        )
+                      }
+                    />
+                  </div>
+                </th>
+              )}
+              <th className="px-6 py-3 w-10 text-center">#</th>
+              {columns.map((col: any) => (
+                <th
+                  key={col.key}
+                  className={`px-6 py-3 cursor-pointer hover:bg-gray-200 dark:hover:bg-white/10 transition-colors ${col.className || ""}`}
+                  onClick={() => col.sortable && requestSort(col.key)}
+                >
+                  <div
+                    className={`flex items-center gap-1 ${col.className?.includes("text-center") ? "justify-center" : ""} ${col.className?.includes("text-right") ? "justify-end" : ""}`}
+                  >
+                    {col.label}
+                    {col.sortable && (
+                      <span className="text-gray-400">
+                        {sortConfig?.key === col.key ? (
+                          sortConfig.direction === "asc" ? (
+                            <FaSortUp />
+                          ) : (
+                            <FaSortDown />
+                          )
+                        ) : (
+                          <FaSort />
+                        )}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border dark:divide-darkmode-border">
+            {paginatedData.length > 0 ? (
+              paginatedData.map((row: any, i: number) => (
+                <tr
+                  key={i}
+                  className={`transition-colors ${selectedIds.includes(row.id) ? "bg-blue-50 dark:bg-blue-900/20" : "hover:bg-gray-50 dark:hover:bg-white/5"}`}
+                >
+                  {enableSelection && (
+                    <td className="px-4 py-4 text-center">
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                          checked={selectedIds.includes(row.id)}
+                          onChange={() => handleSelectRow(row.id)}
+                        />
+                      </div>
+                    </td>
+                  )}
+                  <td className="px-6 py-4 text-center text-gray-400">
+                    {(currentPage - 1) * rowsPerPage + i + 1}
+                  </td>
+                  {columns.map((col: any) => (
+                    <td
+                      key={col.key}
+                      className={`px-6 py-4 ${col.className || ""}`}
+                    >
+                      {col.render
+                        ? col.render(row[col.key], row)
+                        : row[col.key]}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan={columns.length + (enableSelection ? 2 : 1)}
+                  className="px-6 py-10 text-center text-gray-500"
+                >
+                  Tidak ada data ditemukan.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      <div className="flex flex-col items-center justify-between gap-4 border-t border-border bg-gray-50 p-4 dark:bg-white/5 dark:border-darkmode-border sm:flex-row">
+        <div className="text-xs text-gray-500">
+          Menampilkan{" "}
+          <span className="font-bold text-gray-700 dark:text-gray-300">
+            {(currentPage - 1) * rowsPerPage + 1}
+          </span>{" "}
+          sampai{" "}
+          <span className="font-bold text-gray-700 dark:text-gray-300">
+            {Math.min(currentPage * rowsPerPage, sortedData.length)}
+          </span>{" "}
+          dari{" "}
+          <span className="font-bold text-gray-700 dark:text-gray-300">
+            {sortedData.length}
+          </span>{" "}
+          data
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            className="rounded border border-border bg-white px-2 py-1 text-xs outline-none focus:border-primary dark:bg-darkmode-body dark:border-darkmode-border"
+            value={rowsPerPage}
+            onChange={(e) => {
+              setRowsPerPage(Number(e.target.value));
+              setCurrentPage(1);
+            }}
+          >
+            <option value={5}>5</option>
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+            <option value={500}>500</option>
+            <option value={1000}>1000</option>
+          </select>
+          <div className="flex rounded border border-border bg-white dark:bg-darkmode-body dark:border-darkmode-border">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-white/10"
+            >
+              <FaChevronLeft className="text-xs" />
+            </button>
+            <span className="px-3 py-1 text-xs font-medium border-l border-r border-border dark:border-darkmode-border flex items-center">
+              Halaman {currentPage}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages || totalPages === 0}
+              className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50 dark:hover:bg-white/10"
+            >
+              <FaChevronRight className="text-xs" />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

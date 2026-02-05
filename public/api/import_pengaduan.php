@@ -1,243 +1,223 @@
 <?php
-require_once 'config.php';
-
 session_start();
+header('Content-Type: application/json');
+date_default_timezone_set('Asia/Jakarta');
+require_once __DIR__ . '/config.php';
 
-// Check authentication
-if (!isset($_SESSION['user'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized']);
-    exit;
-}
-
-$user = $_SESSION['user'];
-
-// Check if user has admin role (operator or super_admin)
-if ($user['role'] !== 'operator' && $user['role'] !== 'super_admin') {
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['user_role'] !== 'super_admin' && $_SESSION['user_role'] !== 'operator')) {
     http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Forbidden']);
+    echo json_encode(['status' => 'error', 'message' => 'Akses Ditolak']);
     exit;
 }
 
-$action = $_GET['action'] ?? $_POST['action'] ?? '';
+set_time_limit(120);
+ini_set('memory_limit', '512M');
+
+function initPengaduanTable($pdo)
+{
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pengaduan (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nama VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        telepon VARCHAR(20),
+        kategori VARCHAR(100) NOT NULL,
+        judul VARCHAR(255) NOT NULL,
+        isi_pengaduan TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Menunggu',
+        tanggapan TEXT,
+        ip_address VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_status (status),
+        INDEX idx_kategori (kategori)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
 
 try {
-    switch ($action) {
-        case 'template':
-            generateTemplate();
-            break;
+    $pdo = getDBConnection();
+    initPengaduanTable($pdo);
 
-        case 'import':
-            handleImport($pdo);
-            break;
+    $action = $_GET['action'] ?? '';
 
-        default:
-            throw new Exception('Invalid action');
-    }
-} catch (Exception $e) {
-    header('Content-Type: application/json');
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => $e->getMessage()]);
-}
+    if ($action === 'template') {
+        $filename = "template_import_pengaduan.csv";
 
-function generateTemplate()
-{
-    header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename=template_pengaduan.csv');
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
 
-    $output = fopen('php://output', 'w');
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
 
-    // Add BOM for UTF-8
-    fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+        fputcsv($output, ['nama', 'email', 'telepon', 'kategori', 'judul', 'isi_pengaduan', 'status', 'tanggapan', 'created_at', 'ip_address']);
+        fputcsv($output, [
+            'Budi Santoso',
+            'budi.santoso@email.com',
+            '081234567890',
+            'Pelayanan',
+            'Lambat dalam Pengurusan Surat',
+            'Saya mengurus surat keterangan siswa sudah 1 minggu belum jadi. Mohon dipercepat prosesnya.',
+            'Selesai',
+            'Terima kasih atas laporannya. Surat sudah selesai dan dapat diambil.',
+            '2024-12-01 09:00:00',
+            '192.168.1.10'
+        ]);
+        fputcsv($output, [
+            'Siti Nurhaliza',
+            'siti.nur@email.com',
+            '082345678901',
+            'Fasilitas',
+            'Toilet Rusak di Lantai 2',
+            'Toilet wanita lantai 2 sudah beberapa hari tidak bisa digunakan karena rusak.',
+            'Proses',
+            'Sedang kami perbaiki, estimasi selesai 2 hari.',
+            '2024-12-05 14:30:00',
+            '192.168.1.11'
+        ]);
 
-    // Headers
-    fputcsv($output, ['nama', 'email', 'telepon', 'kategori', 'judul', 'isi_pengaduan', 'status', 'tanggapan']);
-
-    // Example rows
-    fputcsv($output, [
-        'John Doe',
-        'john@example.com',
-        '081234567890',
-        'Pelayanan',
-        'Lambatnya Pelayanan Administrasi',
-        'Saya mengalami keterlambatan dalam proses pengurusan dokumen administrasi. Sudah 2 minggu belum selesai.',
-        'menunggu',
-        ''
-    ]);
-
-    fputcsv($output, [
-        'Jane Smith',
-        'jane@example.com',
-        '082345678901',
-        'Fasilitas',
-        'AC Ruang Kuliah Rusak',
-        'AC di ruang kuliah lantai 3 sudah rusak sejak minggu lalu dan membuat mahasiswa tidak nyaman.',
-        'diproses',
-        'Terima kasih atas laporannya. Tim maintenance sedang menangani perbaikan AC.'
-    ]);
-
-    fclose($output);
-    exit;
-}
-
-function handleImport($pdo)
-{
-    header('Content-Type: application/json');
-
-    if (!isset($_FILES['file'])) {
-        throw new Exception('No file uploaded');
+        fclose($output);
+        exit;
     }
 
-    $file = $_FILES['file'];
+    if ($action === 'import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("File CSV tidak ditemukan atau error saat upload.");
+        }
 
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        throw new Exception('File upload error');
-    }
+        $fileTmpPath = $_FILES['file']['tmp_name'];
+        $handle = fopen($fileTmpPath, "r");
+        if ($handle === FALSE) throw new Exception("Gagal membaca file.");
 
-    // Validate file extension
-    $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    if ($ext !== 'csv') {
-        throw new Exception('Only CSV files are allowed');
-    }
+        $headers = fgetcsv($handle, 1000, ",");
+        if (!$headers) throw new Exception("File CSV kosong.");
 
-    // Read CSV
-    $handle = fopen($file['tmp_name'], 'r');
-    if (!$handle) {
-        throw new Exception('Cannot open file');
-    }
+        $cleanHeaders = array_map(function ($h) {
+            return strtolower(trim(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $h)));
+        }, $headers);
 
-    // Skip BOM if present
-    $bom = fread($handle, 3);
-    if ($bom !== chr(0xEF) . chr(0xBB) . chr(0xBF)) {
-        rewind($handle);
-    }
+        if (!in_array('nama', $cleanHeaders) || !in_array('email', $cleanHeaders)) {
+            throw new Exception("Format CSV salah. Kolom 'nama' dan 'email' wajib ada.");
+        }
 
-    // Read header
-    $header = fgetcsv($handle);
-    if (!$header) {
-        fclose($handle);
-        throw new Exception('Invalid CSV format');
-    }
+        $successCount = 0;
+        $pdo->beginTransaction();
 
-    // Validate headers
-    $requiredHeaders = ['nama', 'email', 'telepon', 'kategori', 'judul', 'isi_pengaduan'];
-    foreach ($requiredHeaders as $reqHeader) {
-        if (!in_array($reqHeader, $header)) {
+        try {
+            $stmt = $pdo->prepare("INSERT INTO pengaduan 
+                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address) 
+                VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :created, :ip)");
+
+            while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
+                if (count($data) < 6) continue;
+
+                $stmt->execute([
+                    ':nama' => $data[0] ?: 'Anonim',
+                    ':email' => $data[1],
+                    ':telepon' => $data[2] ?: '',
+                    ':kategori' => $data[3] ?: 'Lainnya',
+                    ':judul' => $data[4],
+                    ':isi' => $data[5],
+                    ':status' => $data[6] ?: 'Menunggu',
+                    ':tanggapan' => $data[7] ?? '',
+                    ':created' => $data[8] ?? date('Y-m-d H:i:s'),
+                    ':ip' => $data[9] ?? '127.0.0.1'
+                ]);
+                $successCount++;
+            }
+
+            $pdo->commit();
             fclose($handle);
-            throw new Exception("Missing required column: $reqHeader");
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => "Berhasil mengimport $successCount pengaduan."
+            ]);
+        } catch (Exception $ex) {
+            $pdo->rollBack();
+            throw $ex;
         }
     }
 
-    // Map header to indices
-    $headerMap = array_flip($header);
+    if ($action === 'generate_dummy') {
+        $dataDummy = [
+            [
+                'nama' => 'Ahmad Fauzi',
+                'email' => 'ahmad.fauzi@email.com',
+                'telepon' => '081234567890',
+                'kategori' => 'Pelayanan',
+                'judul' => 'Pelayanan PPDB Kurang Informatif',
+                'isi' => 'Mohon informasi PPDB diperjelas di website. Banyak orang tua yang bingung.',
+                'status' => 'Selesai',
+                'tanggapan' => 'Terima kasih, sudah kami update di website.'
+            ],
+            [
+                'nama' => 'Dewi Lestari',
+                'email' => 'dewi.lestari@email.com',
+                'telepon' => '082345678901',
+                'kategori' => 'Fasilitas',
+                'judul' => 'AC Kelas 8A Tidak Dingin',
+                'isi' => 'AC di kelas 8A sudah lama tidak dingin. Siswa kepanasan saat belajar.',
+                'status' => 'Proses',
+                'tanggapan' => 'Sedang dalam perbaikan, estimasi selesai minggu depan.'
+            ],
+            [
+                'nama' => 'Rudi Hermawan',
+                'email' => 'rudi.h@email.com',
+                'telepon' => '083456789012',
+                'kategori' => 'Akademik',
+                'judul' => 'Jadwal Pelajaran Sering Berubah',
+                'isi' => 'Jadwal pelajaran sering berubah mendadak tanpa pemberitahuan yang jelas.',
+                'status' => 'Menunggu',
+                'tanggapan' => ''
+            ],
+            [
+                'nama' => 'Nia Ramadhani',
+                'email' => 'nia.rama@email.com',
+                'telepon' => '084567890123',
+                'kategori' => 'Keuangan',
+                'judul' => 'Pembayaran SPP via Transfer Sulit',
+                'isi' => 'Sistem pembayaran SPP via transfer sering error. Mohon diperbaiki.',
+                'status' => 'Proses',
+                'tanggapan' => 'Tim IT sedang memperbaiki sistem pembayaran.'
+            ],
+            [
+                'nama' => 'Hendra Wijaya',
+                'email' => 'hendra.w@email.com',
+                'telepon' => '085678901234',
+                'kategori' => 'SDM',
+                'judul' => 'Guru Sering Terlambat Masuk Kelas',
+                'isi' => 'Beberapa guru sering terlambat masuk kelas. Mohon ditindaklanjuti.',
+                'status' => 'Selesai',
+                'tanggapan' => 'Sudah kami tegur dan akan kami awasi kedisiplinannya.'
+            ]
+        ];
 
-    // Prepare insert statement
-    $stmt = $pdo->prepare("INSERT INTO pengaduan (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())");
+        $stmt = $pdo->prepare("INSERT INTO pengaduan 
+            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address) 
+            VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :ip)");
 
-    $imported = 0;
-    $errors = [];
-    $lineNum = 1;
-
-    // Valid values
-    $validKategori = ['Pelayanan', 'Fasilitas', 'Akademik', 'Administrasi', 'Lainnya'];
-    $validStatus = ['menunggu', 'diproses', 'selesai', 'ditolak'];
-
-    // Start transaction
-    $pdo->beginTransaction();
-
-    try {
-        while (($row = fgetcsv($handle)) !== false) {
-            $lineNum++;
-
-            // Skip empty rows
-            if (empty(array_filter($row))) {
-                continue;
-            }
-
-            // Extract values
-            $nama = trim($row[$headerMap['nama']] ?? '');
-            $email = trim($row[$headerMap['email']] ?? '');
-            $telepon = trim($row[$headerMap['telepon']] ?? '');
-            $kategori = trim($row[$headerMap['kategori']] ?? '');
-            $judul = trim($row[$headerMap['judul']] ?? '');
-            $isi_pengaduan = trim($row[$headerMap['isi_pengaduan']] ?? '');
-            $status = trim($row[$headerMap['status']] ?? 'menunggu');
-            $tanggapan = isset($headerMap['tanggapan']) ? trim($row[$headerMap['tanggapan']] ?? '') : '';
-
-            // Validate required fields
-            if (empty($nama)) {
-                $errors[] = "Line $lineNum: Nama is required";
-                continue;
-            }
-
-            if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors[] = "Line $lineNum: Valid email is required";
-                continue;
-            }
-
-            if (empty($telepon)) {
-                $errors[] = "Line $lineNum: Telepon is required";
-                continue;
-            }
-
-            if (empty($kategori)) {
-                $errors[] = "Line $lineNum: Kategori is required";
-                continue;
-            }
-
-            if (!in_array($kategori, $validKategori)) {
-                $errors[] = "Line $lineNum: Invalid kategori. Must be one of: " . implode(', ', $validKategori);
-                continue;
-            }
-
-            if (empty($judul)) {
-                $errors[] = "Line $lineNum: Judul is required";
-                continue;
-            }
-
-            if (empty($isi_pengaduan)) {
-                $errors[] = "Line $lineNum: Isi pengaduan is required";
-                continue;
-            }
-
-            // Validate status
-            if (!in_array($status, $validStatus)) {
-                $status = 'menunggu';
-            }
-
-            // Get IP address (use a placeholder for imported data)
-            $ip_address = 'imported';
-
-            // Insert
+        $count = 0;
+        foreach ($dataDummy as $dummy) {
             $stmt->execute([
-                $nama,
-                $email,
-                $telepon,
-                $kategori,
-                $judul,
-                $isi_pengaduan,
-                $status,
-                $tanggapan ?: null,
-                $ip_address
+                ':nama' => $dummy['nama'],
+                ':email' => $dummy['email'],
+                ':telepon' => $dummy['telepon'],
+                ':kategori' => $dummy['kategori'],
+                ':judul' => $dummy['judul'],
+                ':isi' => $dummy['isi'],
+                ':status' => $dummy['status'],
+                ':tanggapan' => $dummy['tanggapan'],
+                ':ip' => '127.0.0.1'
             ]);
-
-            $imported++;
+            $count++;
         }
-
-        // Commit transaction
-        $pdo->commit();
-
-        fclose($handle);
 
         echo json_encode([
-            'success' => true,
-            'imported' => $imported,
-            'errors' => $errors,
-            'message' => "$imported records imported successfully" . (count($errors) > 0 ? " with " . count($errors) . " errors" : "")
+            'status' => 'success',
+            'message' => "Berhasil generate $count data dummy pengaduan."
         ]);
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        fclose($handle);
-        throw new Exception('Import failed: ' . $e->getMessage());
     }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
