@@ -1,6 +1,3 @@
-
-
-
 ## Direktori: src
 
 ### File: `./src/config/config.json`
@@ -179,6 +176,10 @@
         {
           "name": "Survei Kepuasan",
           "url": "/survei-kepuasan"
+        },
+        {
+          "name": "Pengaduan",
+          "url": "/pengaduan"
         },
         {
           "name": "Pertanyaan Umum (FAQ)",
@@ -1762,6 +1763,260 @@ for (let i = 1; i <= totalPages; i++) {
   )
 }
 
+```
+
+---
+
+### File: `./src/layouts/components/PengaduanForm.astro`
+
+```astro
+import React, { useState, useEffect } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaExclamationTriangle,
+  FaPaperPlane,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
+
+const PengaduanForm = () => {
+  const [formData, setFormData] = useState({
+    nama: "",
+    email: "",
+    telepon: "",
+    kategori: "Pelayanan",
+    judul: "",
+    isi_pengaduan: "",
+  });
+
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
+
+  const kategoriOptions = [
+    "Pelayanan",
+    "Fasilitas",
+    "Akademik",
+    "Keuangan",
+    "SDM",
+    "Lainnya",
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/pengaduan.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (result.status === "success") {
+        setStatus("success");
+        setMessage(result.message);
+        setFormData({
+          nama: "",
+          email: "",
+          telepon: "",
+          kategori: "Pelayanan",
+          judul: "",
+          isi_pengaduan: "",
+        });
+      } else {
+        setStatus("error");
+        setMessage(result.message || "Terjadi kesalahan.");
+      }
+    } catch (error) {
+      setStatus("error");
+      setMessage("Gagal menghubungi server.");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div className="rounded-xl border border-border bg-white p-8 shadow-sm text-center dark:border-darkmode-border dark:bg-darkmode-body">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4 animate-bounce">
+          <FaCheckCircle size={30} />
+        </div>
+        <h3 className="h4 mb-2 text-green-700 dark:text-green-400">
+          Pengaduan Terkirim!
+        </h3>
+        <p className="mb-6 text-sm text-text-light">{message}</p>
+        <button
+          onClick={() => setStatus("idle")}
+          className="btn btn-primary"
+        >
+          Kirim Pengaduan Lain
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-white p-8 shadow-sm dark:border-darkmode-border dark:bg-darkmode-body">
+      <h3 className="h4 mb-6 text-center">Form Pengaduan</h3>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Nama */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaUser className="text-primary" />
+            Nama Lengkap <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="nama"
+            value={formData.nama}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Nama lengkap Anda"
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaEnvelope className="text-primary" />
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="email@example.com"
+            required
+          />
+        </div>
+
+        {/* Telepon */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaPhone className="text-primary" />
+            Nomor Telepon
+          </label>
+          <input
+            type="tel"
+            name="telepon"
+            value={formData.telepon}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="08123456789"
+          />
+        </div>
+
+        {/* Kategori */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaExclamationTriangle className="text-primary" />
+            Kategori Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="kategori"
+            value={formData.kategori}
+            onChange={handleChange}
+            className="form-input cursor-pointer"
+            required
+          >
+            {kategoriOptions.map((kat) => (
+              <option key={kat} value={kat}>
+                {kat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Judul */}
+        <div>
+          <label className="form-label">
+            Judul Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="judul"
+            value={formData.judul}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Ringkasan pengaduan Anda"
+            required
+          />
+        </div>
+
+        {/* Isi Pengaduan */}
+        <div>
+          <label className="form-label">
+            Isi Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="isi_pengaduan"
+            value={formData.isi_pengaduan}
+            onChange={handleChange}
+            className="form-input"
+            rows={6}
+            placeholder="Jelaskan pengaduan Anda secara detail..."
+            required
+          ></textarea>
+        </div>
+
+        {/* Status Error */}
+        {status === "error" && (
+          <div className="p-4 bg-red-100 text-red-700 rounded-lg flex items-center gap-3">
+            <FaTimesCircle className="text-xl" />
+            <p className="text-sm">{message}</p>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="btn btn-primary w-full flex items-center justify-center gap-2"
+        >
+          {status === "loading" ? (
+            <>
+              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+              Mengirim...
+            </>
+          ) : (
+            <>
+              <FaPaperPlane /> Kirim Pengaduan
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <p className="text-xs text-gray-600 dark:text-gray-300">
+          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti 
+          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon 
+          yang telah didaftarkan.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default PengaduanForm;
 ```
 
 ---
@@ -4996,6 +5251,260 @@ const InstallPrompt = () => {
 
 export default InstallPrompt;
 
+```
+
+---
+
+### File: `./src/layouts/helpers/PengaduanForm.tsx`
+
+```tsx
+import React, { useState, useEffect } from "react";
+import {
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaExclamationTriangle,
+  FaPaperPlane,
+  FaCheckCircle,
+  FaTimesCircle,
+} from "react-icons/fa";
+
+const PengaduanForm = () => {
+  const [formData, setFormData] = useState({
+    nama: "",
+    email: "",
+    telepon: "",
+    kategori: "Pelayanan",
+    judul: "",
+    isi_pengaduan: "",
+  });
+
+  const [status, setStatus] = useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [message, setMessage] = useState("");
+
+  const kategoriOptions = [
+    "Pelayanan",
+    "Fasilitas",
+    "Akademik",
+    "Keuangan",
+    "SDM",
+    "Lainnya",
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/pengaduan.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await res.json();
+
+      if (result.status === "success") {
+        setStatus("success");
+        setMessage(result.message);
+        setFormData({
+          nama: "",
+          email: "",
+          telepon: "",
+          kategori: "Pelayanan",
+          judul: "",
+          isi_pengaduan: "",
+        });
+      } else {
+        setStatus("error");
+        setMessage(result.message || "Terjadi kesalahan.");
+      }
+    } catch (error) {
+      setStatus("error");
+      setMessage("Gagal menghubungi server.");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div className="rounded-xl border border-border bg-white p-8 shadow-sm text-center dark:border-darkmode-border dark:bg-darkmode-body">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 mb-4 animate-bounce">
+          <FaCheckCircle size={30} />
+        </div>
+        <h3 className="h4 mb-2 text-green-700 dark:text-green-400">
+          Pengaduan Terkirim!
+        </h3>
+        <p className="mb-6 text-sm text-text-light">{message}</p>
+        <button
+          onClick={() => setStatus("idle")}
+          className="btn btn-primary"
+        >
+          Kirim Pengaduan Lain
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border bg-white p-8 shadow-sm dark:border-darkmode-border dark:bg-darkmode-body">
+      <h3 className="h4 mb-6 text-center">Form Pengaduan</h3>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Nama */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaUser className="text-primary" />
+            Nama Lengkap <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="nama"
+            value={formData.nama}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Nama lengkap Anda"
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaEnvelope className="text-primary" />
+            Email <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="email@example.com"
+            required
+          />
+        </div>
+
+        {/* Telepon */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaPhone className="text-primary" />
+            Nomor Telepon
+          </label>
+          <input
+            type="tel"
+            name="telepon"
+            value={formData.telepon}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="08123456789"
+          />
+        </div>
+
+        {/* Kategori */}
+        <div>
+          <label className="form-label flex items-center gap-2">
+            <FaExclamationTriangle className="text-primary" />
+            Kategori Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="kategori"
+            value={formData.kategori}
+            onChange={handleChange}
+            className="form-input cursor-pointer"
+            required
+          >
+            {kategoriOptions.map((kat) => (
+              <option key={kat} value={kat}>
+                {kat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Judul */}
+        <div>
+          <label className="form-label">
+            Judul Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            name="judul"
+            value={formData.judul}
+            onChange={handleChange}
+            className="form-input"
+            placeholder="Ringkasan pengaduan Anda"
+            required
+          />
+        </div>
+
+        {/* Isi Pengaduan */}
+        <div>
+          <label className="form-label">
+            Isi Pengaduan <span className="text-red-500">*</span>
+          </label>
+          <textarea
+            name="isi_pengaduan"
+            value={formData.isi_pengaduan}
+            onChange={handleChange}
+            className="form-input"
+            rows={6}
+            placeholder="Jelaskan pengaduan Anda secara detail..."
+            required
+          ></textarea>
+        </div>
+
+        {/* Status Error */}
+        {status === "error" && (
+          <div className="p-4 bg-red-100 text-red-700 rounded-lg flex items-center gap-3">
+            <FaTimesCircle className="text-xl" />
+            <p className="text-sm">{message}</p>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="btn btn-primary w-full flex items-center justify-center gap-2"
+        >
+          {status === "loading" ? (
+            <>
+              <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"></div>
+              Mengirim...
+            </>
+          ) : (
+            <>
+              <FaPaperPlane /> Kirim Pengaduan
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <p className="text-xs text-gray-600 dark:text-gray-300">
+          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti 
+          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon 
+          yang telah didaftarkan.
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default PengaduanForm;
 ```
 
 ---
@@ -9567,6 +10076,46 @@ const { banner, features } = homepage.data;
 
 ---
 
+### File: `./src/pages/pengaduan.astro`
+
+```astro
+---
+import Base from "@/layouts/Base.astro";
+import PageHeader from "@/partials/PageHeader.astro";
+import PengaduanForm from "@/layouts/helpers/PengaduanForm";
+
+const title = "Pengaduan Masyarakat";
+const description =
+  "Sampaikan keluhan, kritik, atau saran Anda terkait pelayanan dan kegiatan di MTs Negeri 1 Pandeglang.";
+---
+
+<Base title={title} meta_title={title} description={description}>
+  <PageHeader title={title} />
+
+  <section class="section-sm">
+    <div class="container">
+      <div class="row justify-center">
+        <div class="lg:col-10">
+          <div class="mb-10 text-center">
+            <p class="text-lg">
+              Sistem pengaduan ini dirancang untuk menerima masukan, keluhan,
+              dan saran dari masyarakat terkait pelayanan di <strong
+                >MTs Negeri 1 Pandeglang</strong
+              >. Kami berkomitmen untuk menindaklanjuti setiap pengaduan dengan
+              serius dan profesional.
+            </p>
+          </div>
+
+          <PengaduanForm client:only="react" />
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+```
+
+---
+
 ### File: `./src/pages/survei-kepuasan.astro`
 
 ```astro
@@ -10892,6 +11441,173 @@ try {
 
 ---
 
+### File: `./public/api/admin_pengaduan.php`
+
+```
+<?php
+session_start();
+date_default_timezone_set('Asia/Jakarta');
+require_once __DIR__ . '/config.php';
+
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    header('HTTP/1.1 403 Forbidden');
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => 'Unauthorized']);
+    exit;
+}
+
+function initPengaduanTable($pdo)
+{
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pengaduan (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nama VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        telepon VARCHAR(20),
+        kategori VARCHAR(100) NOT NULL,
+        judul VARCHAR(255) NOT NULL,
+        isi_pengaduan TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Menunggu',
+        tanggapan TEXT,
+        ip_address VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_status (status),
+        INDEX idx_kategori (kategori)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+function formatTanggalIndo($dateString)
+{
+    if (!$dateString) return "-";
+    try {
+        $date = new DateTime(
+            $dateString . includes("Z")
+                ? $dateString
+                : $dateString . replace(" ", "T") . "Z"
+        );
+        return (new IntlDateFormatter(
+            'id_ID',
+            IntlDateFormatter::LONG,
+            IntlDateFormatter::SHORT,
+            'Asia/Jakarta'
+        ))->format($date);
+    } catch (Exception $e) {
+        return $dateString;
+    }
+}
+
+try {
+    $pdo = getDBConnection();
+    initPengaduanTable($pdo);
+
+    $action = $_GET['action'] ?? 'list';
+
+    if ($action === 'list') {
+        header('Content-Type: application/json');
+
+        $stmt = $pdo->query("SELECT * FROM pengaduan ORDER BY created_at DESC");
+        $pengaduan = $stmt->fetchAll();
+
+        $stats = [
+            'total' => count($pengaduan),
+            'menunggu' => 0,
+            'proses' => 0,
+            'selesai' => 0,
+            'ditolak' => 0
+        ];
+
+        foreach ($pengaduan as $p) {
+            $status = strtolower($p['status']);
+            if (isset($stats[$status])) {
+                $stats[$status]++;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $pengaduan,
+            'stats' => $stats
+        ]);
+    } elseif ($action === 'update' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        $id = (int)$data['id'];
+        $status = $data['status'];
+        $tanggapan = htmlspecialchars(strip_tags($data['tanggapan'] ?? ''));
+
+        $stmt = $pdo->prepare("UPDATE pengaduan 
+            SET status = :status, tanggapan = :tanggapan 
+            WHERE id = :id");
+        $stmt->execute([
+            ':status' => $status,
+            ':tanggapan' => $tanggapan,
+            ':id' => $id
+        ]);
+
+        echo json_encode(['status' => 'success', 'message' => 'Pengaduan diupdate']);
+    } elseif ($action === 'delete' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($_SESSION['user_role'] !== 'super_admin') {
+            throw new Exception("Hanya Super Admin yang dapat menghapus pengaduan.");
+        }
+
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        $ids = $data['ids'] ?? [];
+        if (empty($ids)) throw new Exception("ID tidak valid.");
+
+        $sanitized_ids = array_map('intval', $ids);
+        $placeholders = implode(',', array_fill(0, count($sanitized_ids), '?'));
+
+        $stmt = $pdo->prepare("DELETE FROM pengaduan WHERE id IN ($placeholders)");
+        $stmt->execute($sanitized_ids);
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => count($sanitized_ids) . ' pengaduan dihapus'
+        ]);
+    } elseif ($action === 'export') {
+        $filename = "laporan_pengaduan_" . date('Y-m-d_His') . ".csv";
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, ['ID', 'Tanggal', 'Nama', 'Email', 'Telepon', 'Kategori', 'Judul', 'Isi Pengaduan', 'Status', 'Tanggapan', 'IP Address']);
+
+        $stmt = $pdo->query("SELECT * FROM pengaduan ORDER BY created_at DESC");
+        while ($row = $stmt->fetch()) {
+            fputcsv($output, [
+                $row['id'],
+                $row['created_at'],
+                $row['nama'],
+                $row['email'],
+                $row['telepon'],
+                $row['kategori'],
+                $row['judul'],
+                $row['isi_pengaduan'],
+                $row['status'],
+                $row['tanggapan'] ?: '-',
+                $row['ip_address']
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+}
+
+```
+
+---
+
 ### File: `./public/api/auth.php`
 
 ```
@@ -11118,6 +11834,49 @@ function initializeTables($pdo)
 
     $stmt = $pdo->prepare("INSERT IGNORE INTO global_stats (`key`, value) VALUES ('site_visits', 0)");
     $stmt->execute();
+}
+function initializeComplaintsTables($pdo)
+{
+    // Tabel untuk pengaduan
+    $pdo->exec("CREATE TABLE IF NOT EXISTS complaints (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        ticket_number VARCHAR(50) UNIQUE NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(50),
+        category VARCHAR(100) NOT NULL,
+        subject VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        attachment VARCHAR(255),
+        status VARCHAR(50) DEFAULT 'pending',
+        priority VARCHAR(50) DEFAULT 'normal',
+        admin_response TEXT,
+        responded_at TIMESTAMP NULL,
+        responded_by VARCHAR(255),
+        ip_address VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_ticket (ticket_number),
+        INDEX idx_status (status),
+        INDEX idx_category (category),
+        INDEX idx_created (created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+
+    // Generate ticket number function
+}
+
+// Helper untuk generate nomor tiket
+function generateTicketNumber($pdo)
+{
+    $prefix = 'ADU';
+    $date = date('Ymd');
+
+    $stmt = $pdo->prepare("SELECT COUNT(*) as total FROM complaints WHERE DATE(created_at) = CURDATE()");
+    $stmt->execute();
+    $row = $stmt->fetch();
+    $sequence = str_pad(($row['total'] ?? 0) + 1, 4, '0', STR_PAD_LEFT);
+
+    return "{$prefix}{$date}{$sequence}";
 }
 
 ```
@@ -11617,6 +12376,342 @@ try {
 
 ---
 
+### File: `./public/api/import_pengaduan.php`
+
+```
+<?php
+session_start();
+header('Content-Type: application/json');
+date_default_timezone_set('Asia/Jakarta');
+require_once __DIR__ . '/config.php';
+
+if (!isset($_SESSION['admin_logged_in']) || ($_SESSION['user_role'] !== 'super_admin' && $_SESSION['user_role'] !== 'operator')) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Akses Ditolak']);
+    exit;
+}
+
+set_time_limit(120);
+ini_set('memory_limit', '512M');
+
+function initPengaduanTable($pdo)
+{
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pengaduan (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nama VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        telepon VARCHAR(20),
+        kategori VARCHAR(100) NOT NULL,
+        judul VARCHAR(255) NOT NULL,
+        isi_pengaduan TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Menunggu',
+        tanggapan TEXT,
+        ip_address VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_status (status),
+        INDEX idx_kategori (kategori)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+try {
+    $pdo = getDBConnection();
+    initPengaduanTable($pdo);
+
+    $action = $_GET['action'] ?? '';
+
+    if ($action === 'template') {
+        $filename = "template_import_pengaduan.csv";
+
+        header('Content-Type: text/csv');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, ['nama', 'email', 'telepon', 'kategori', 'judul', 'isi_pengaduan', 'status', 'tanggapan', 'created_at', 'ip_address']);
+        fputcsv($output, [
+            'Budi Santoso',
+            'budi.santoso@email.com',
+            '081234567890',
+            'Pelayanan',
+            'Lambat dalam Pengurusan Surat',
+            'Saya mengurus surat keterangan siswa sudah 1 minggu belum jadi. Mohon dipercepat prosesnya.',
+            'Selesai',
+            'Terima kasih atas laporannya. Surat sudah selesai dan dapat diambil.',
+            '2024-12-01 09:00:00',
+            '192.168.1.10'
+        ]);
+        fputcsv($output, [
+            'Siti Nurhaliza',
+            'siti.nur@email.com',
+            '082345678901',
+            'Fasilitas',
+            'Toilet Rusak di Lantai 2',
+            'Toilet wanita lantai 2 sudah beberapa hari tidak bisa digunakan karena rusak.',
+            'Proses',
+            'Sedang kami perbaiki, estimasi selesai 2 hari.',
+            '2024-12-05 14:30:00',
+            '192.168.1.11'
+        ]);
+
+        fclose($output);
+        exit;
+    }
+
+    if ($action === 'import' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("File CSV tidak ditemukan atau error saat upload.");
+        }
+
+        $fileTmpPath = $_FILES['file']['tmp_name'];
+        $handle = fopen($fileTmpPath, "r");
+        if ($handle === FALSE) throw new Exception("Gagal membaca file.");
+
+        $headers = fgetcsv($handle, 1000, ",");
+        if (!$headers) throw new Exception("File CSV kosong.");
+
+        $cleanHeaders = array_map(function ($h) {
+            return strtolower(trim(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $h)));
+        }, $headers);
+
+        if (!in_array('nama', $cleanHeaders) || !in_array('email', $cleanHeaders)) {
+            throw new Exception("Format CSV salah. Kolom 'nama' dan 'email' wajib ada.");
+        }
+
+        $successCount = 0;
+        $pdo->beginTransaction();
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO pengaduan 
+                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address) 
+                VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :created, :ip)");
+
+            while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
+                if (count($data) < 6) continue;
+
+                $stmt->execute([
+                    ':nama' => $data[0] ?: 'Anonim',
+                    ':email' => $data[1],
+                    ':telepon' => $data[2] ?: '',
+                    ':kategori' => $data[3] ?: 'Lainnya',
+                    ':judul' => $data[4],
+                    ':isi' => $data[5],
+                    ':status' => $data[6] ?: 'Menunggu',
+                    ':tanggapan' => $data[7] ?? '',
+                    ':created' => $data[8] ?? date('Y-m-d H:i:s'),
+                    ':ip' => $data[9] ?? '127.0.0.1'
+                ]);
+                $successCount++;
+            }
+
+            $pdo->commit();
+            fclose($handle);
+
+            echo json_encode([
+                'status' => 'success',
+                'message' => "Berhasil mengimport $successCount pengaduan."
+            ]);
+        } catch (Exception $ex) {
+            $pdo->rollBack();
+            throw $ex;
+        }
+    }
+
+    if ($action === 'generate_dummy') {
+        $dataDummy = [
+            [
+                'nama' => 'Ahmad Fauzi',
+                'email' => 'ahmad.fauzi@email.com',
+                'telepon' => '081234567890',
+                'kategori' => 'Pelayanan',
+                'judul' => 'Pelayanan PPDB Kurang Informatif',
+                'isi' => 'Mohon informasi PPDB diperjelas di website. Banyak orang tua yang bingung.',
+                'status' => 'Selesai',
+                'tanggapan' => 'Terima kasih, sudah kami update di website.'
+            ],
+            [
+                'nama' => 'Dewi Lestari',
+                'email' => 'dewi.lestari@email.com',
+                'telepon' => '082345678901',
+                'kategori' => 'Fasilitas',
+                'judul' => 'AC Kelas 8A Tidak Dingin',
+                'isi' => 'AC di kelas 8A sudah lama tidak dingin. Siswa kepanasan saat belajar.',
+                'status' => 'Proses',
+                'tanggapan' => 'Sedang dalam perbaikan, estimasi selesai minggu depan.'
+            ],
+            [
+                'nama' => 'Rudi Hermawan',
+                'email' => 'rudi.h@email.com',
+                'telepon' => '083456789012',
+                'kategori' => 'Akademik',
+                'judul' => 'Jadwal Pelajaran Sering Berubah',
+                'isi' => 'Jadwal pelajaran sering berubah mendadak tanpa pemberitahuan yang jelas.',
+                'status' => 'Menunggu',
+                'tanggapan' => ''
+            ],
+            [
+                'nama' => 'Nia Ramadhani',
+                'email' => 'nia.rama@email.com',
+                'telepon' => '084567890123',
+                'kategori' => 'Keuangan',
+                'judul' => 'Pembayaran SPP via Transfer Sulit',
+                'isi' => 'Sistem pembayaran SPP via transfer sering error. Mohon diperbaiki.',
+                'status' => 'Proses',
+                'tanggapan' => 'Tim IT sedang memperbaiki sistem pembayaran.'
+            ],
+            [
+                'nama' => 'Hendra Wijaya',
+                'email' => 'hendra.w@email.com',
+                'telepon' => '085678901234',
+                'kategori' => 'SDM',
+                'judul' => 'Guru Sering Terlambat Masuk Kelas',
+                'isi' => 'Beberapa guru sering terlambat masuk kelas. Mohon ditindaklanjuti.',
+                'status' => 'Selesai',
+                'tanggapan' => 'Sudah kami tegur dan akan kami awasi kedisiplinannya.'
+            ]
+        ];
+
+        $stmt = $pdo->prepare("INSERT INTO pengaduan 
+            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address) 
+            VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :ip)");
+
+        $count = 0;
+        foreach ($dataDummy as $dummy) {
+            $stmt->execute([
+                ':nama' => $dummy['nama'],
+                ':email' => $dummy['email'],
+                ':telepon' => $dummy['telepon'],
+                ':kategori' => $dummy['kategori'],
+                ':judul' => $dummy['judul'],
+                ':isi' => $dummy['isi'],
+                ':status' => $dummy['status'],
+                ':tanggapan' => $dummy['tanggapan'],
+                ':ip' => '127.0.0.1'
+            ]);
+            $count++;
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => "Berhasil generate $count data dummy pengaduan."
+        ]);
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+}
+
+```
+
+---
+
+### File: `./public/api/pengaduan.php`
+
+```
+<?php
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Methods: GET, POST');
+require_once __DIR__ . '/config.php';
+
+function getClientIP()
+{
+    if (!empty($_SERVER['HTTP_CLIENT_IP'])) return $_SERVER['HTTP_CLIENT_IP'];
+    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) return $_SERVER['HTTP_X_FORWARDED_FOR'];
+    return $_SERVER['REMOTE_ADDR'];
+}
+
+function initPengaduanTable($pdo)
+{
+    $pdo->exec("CREATE TABLE IF NOT EXISTS pengaduan (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nama VARCHAR(255) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        telepon VARCHAR(20),
+        kategori VARCHAR(100) NOT NULL,
+        judul VARCHAR(255) NOT NULL,
+        isi_pengaduan TEXT NOT NULL,
+        status VARCHAR(50) DEFAULT 'Menunggu',
+        tanggapan TEXT,
+        ip_address VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at),
+        INDEX idx_status (status),
+        INDEX idx_kategori (kategori)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
+try {
+    $pdo = getDBConnection();
+    initPengaduanTable($pdo);
+    $ip_address = getClientIP();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
+
+        // Validasi
+        if (
+            empty($data['nama']) || empty($data['email']) || empty($data['kategori']) ||
+            empty($data['judul']) || empty($data['isi_pengaduan'])
+        ) {
+            throw new Exception("Semua field wajib diisi.");
+        }
+
+        // Sanitasi
+        $nama = htmlspecialchars(strip_tags($data['nama']));
+        $email = filter_var($data['email'], FILTER_VALIDATE_EMAIL);
+        if (!$email) throw new Exception("Format email tidak valid.");
+
+        $telepon = htmlspecialchars(strip_tags($data['telepon'] ?? ''));
+        $kategori = htmlspecialchars(strip_tags($data['kategori']));
+        $judul = htmlspecialchars(strip_tags($data['judul']));
+        $isi = htmlspecialchars(strip_tags($data['isi_pengaduan']));
+
+        // Insert
+        $stmt = $pdo->prepare("INSERT INTO pengaduan 
+            (nama, email, telepon, kategori, judul, isi_pengaduan, ip_address) 
+            VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :ip)");
+
+        $stmt->execute([
+            ':nama' => $nama,
+            ':email' => $email,
+            ':telepon' => $telepon,
+            ':kategori' => $kategori,
+            ':judul' => $judul,
+            ':isi' => $isi,
+            ':ip' => $ip_address
+        ]);
+
+        echo json_encode([
+            'status' => 'success',
+            'message' => 'Pengaduan Anda telah kami terima. Terima kasih atas partisipasi Anda. Kami akan segera menindaklanjuti.'
+        ]);
+    } else {
+        // GET request (optional: untuk cek statistik publik)
+        $total = $pdo->query("SELECT COUNT(*) FROM pengaduan")->fetchColumn();
+        $selesai = $pdo->query("SELECT COUNT(*) FROM pengaduan WHERE status = 'Selesai'")->fetchColumn();
+
+        echo json_encode([
+            'status' => 'ready',
+            'stats' => [
+                'total' => $total,
+                'selesai' => $selesai
+            ]
+        ]);
+    }
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+}
+
+```
+
+---
+
 ### File: `./public/api/print_pdf.php`
 
 ```
@@ -12071,6 +13166,337 @@ try {
     $pdf->Cell(0, 4, 'NIP. 197006032000031002', 0, 1, 'C');
 
     $pdf->Output('I', 'Laporan_Statistik_Website_' . $month . '_' . $year . '.pdf');
+} catch (Exception $e) {
+    die("PDF Error: " . $e->getMessage());
+}
+
+```
+
+---
+
+### File: `./public/api/print_pengaduan_pdf.php`
+
+```
+<?php
+ini_set('display_errors', 0);
+ini_set('log_errors', 1);
+session_start();
+date_default_timezone_set('Asia/Jakarta');
+require_once __DIR__ . '/config.php';
+
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
+    die("Akses Ditolak.");
+}
+if (!file_exists(__DIR__ . '/lib/fpdf.php')) {
+    die("Error: Library FPDF tidak ditemukan.");
+}
+require('lib/fpdf.php');
+
+try {
+    $pdo = getDBConnection();
+} catch (Exception $e) {
+    die("Error DB: " . $e->getMessage());
+}
+
+$month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
+$year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
+$status = isset($_GET['status']) ? $_GET['status'] : 'all';
+
+$bulanIndo = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+$periodeText = strtoupper($bulanIndo[$month] . ' ' . $year);
+
+function getIndonesianDate($timestamp = null)
+{
+    $dt = new DateTime($timestamp ?? 'now');
+    $bulan = [1 => 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    return $dt->format('d') . ' ' . $bulan[(int)$dt->format('m')] . ' ' . $dt->format('Y');
+}
+
+function formatFullTime($timestamp)
+{
+    return getIndonesianDate($timestamp) . ' ' . date('H:i', strtotime($timestamp)) . ' WIB';
+}
+
+class PDF extends FPDF
+{
+    var $widths;
+    var $aligns;
+    var $tableHeaderCallback = null;
+    var $isPrintingTable = false;
+
+    function setPageBreakTrigger($val)
+    {
+        $this->PageBreakTrigger = $val;
+    }
+
+    function getPageBreakTrigger()
+    {
+        return $this->PageBreakTrigger;
+    }
+
+    function SetWidths($w)
+    {
+        $this->widths = $w;
+    }
+
+    function SetAligns($a)
+    {
+        $this->aligns = $a;
+    }
+
+    function SetTableHeaderCallback($callback)
+    {
+        $this->tableHeaderCallback = $callback;
+    }
+
+    function Header()
+    {
+        $path = '../images/instansi/';
+        $logoSize = 24;
+        if (file_exists($path . 'logo-institusi.png')) $this->Image($path . 'logo-institusi.png', 10, 10, $logoSize);
+        if (file_exists($path . 'logo-instansi.png')) $this->Image($path . 'logo-instansi.png', 176, 10, $logoSize);
+
+        $this->SetY(12);
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(0, 5, 'KEMENTERIAN AGAMA REPUBLIK INDONESIA', 0, 1, 'C');
+        $this->SetFont('Arial', 'B', 12);
+        $this->Cell(0, 6, 'KANTOR KEMENTERIAN AGAMA KABUPATEN PANDEGLANG', 0, 1, 'C');
+        $this->SetFont('Arial', 'B', 14);
+        $this->Cell(0, 6, 'MADRASAH TSANAWIYAH NEGERI 1 PANDEGLANG', 0, 1, 'C');
+        $this->SetFont('Arial', '', 9);
+        $this->Cell(0, 4, 'Jl. Raya Labuan Km. 5,7 Palurahan, Kaduhejo, Pandeglang - Banten 42253', 0, 1, 'C');
+        $this->Cell(0, 4, 'Website: https://mtsn1pandeglang.sch.id | Email: adm@mtsn1pandeglang.sch.id', 0, 1, 'C');
+
+        $this->SetLineWidth(0.5);
+        $this->Line(10, 39, 200, 39);
+        $this->SetLineWidth(0.2);
+        $this->Line(10, 40, 200, 40);
+        $this->Ln(6);
+    }
+
+    function Footer()
+    {
+        $this->SetY(-15);
+        $this->SetFont('Arial', 'I', 8);
+        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
+    }
+
+    function Row($data, $fill = false)
+    {
+        $nb = 0;
+        for ($i = 0; $i < count($data); $i++)
+            $nb = max($nb, $this->NbLines($this->widths[$i], $data[$i]));
+
+        $h = 5 * $nb;
+        $this->CheckPageBreak($h);
+
+        for ($i = 0; $i < count($data); $i++) {
+            $w = $this->widths[$i];
+            $a = isset($this->aligns[$i]) ? $this->aligns[$i] : 'L';
+            $x = $this->GetX();
+            $y = $this->GetY();
+            $this->Rect($x, $y, $w, $h, $fill ? 'DF' : 'D');
+            $this->MultiCell($w, 5, $data[$i], 0, $a);
+            $this->SetXY($x + $w, $y);
+        }
+        $this->Ln($h);
+    }
+
+    function CheckPageBreak($h)
+    {
+        if ($this->GetY() + $h > $this->PageBreakTrigger) {
+            $this->AddPage($this->CurOrientation);
+            if ($this->isPrintingTable && is_callable($this->tableHeaderCallback)) {
+                call_user_func($this->tableHeaderCallback);
+            }
+        }
+    }
+
+    function NbLines($w, $txt)
+    {
+        $cw = &$this->CurrentFont['cw'];
+        if ($w == 0) $w = $this->w - $this->rMargin - $this->x;
+        $wmax = ($w - 2 * $this->cMargin) * 1000 / $this->FontSize;
+        $s = str_replace("\r", '', $txt);
+        $nb = strlen($s);
+        if ($nb > 0 && $s[$nb - 1] == "\n") $nb--;
+        $sep = -1;
+        $i = 0;
+        $j = 0;
+        $l = 0;
+        $nl = 1;
+        while ($i < $nb) {
+            $c = $s[$i];
+            if ($c == "\n") {
+                $i++;
+                $sep = -1;
+                $j = $i;
+                $l = 0;
+                $nl++;
+                continue;
+            }
+            if ($c == ' ') $sep = $i;
+            $l += $cw[$c];
+            if ($l > $wmax) {
+                if ($sep == -1) {
+                    if ($i == $j) $i++;
+                } else $i = $sep + 1;
+                $sep = -1;
+                $j = $i;
+                $l = 0;
+                $nl++;
+            } else $i++;
+        }
+        return $nl;
+    }
+}
+
+try {
+    $pdf = new PDF();
+    $pdf->AliasNbPages();
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetAutoPageBreak(false);
+    $pdf->setPageBreakTrigger(277);
+    $pdf->AddPage();
+
+    // Filter query
+    $whereClause = "WHERE MONTH(created_at) = :month AND YEAR(created_at) = :year";
+    $params = [':month' => $month, ':year' => $year];
+
+    if ($status !== 'all') {
+        $whereClause .= " AND status = :status";
+        $params[':status'] = $status;
+    }
+
+    // Stats
+    $totalQuery = $pdo->prepare("SELECT COUNT(*) FROM pengaduan $whereClause");
+    $totalQuery->execute($params);
+    $totalPengaduan = $totalQuery->fetchColumn();
+
+    $menunggu = $pdo->prepare("SELECT COUNT(*) FROM pengaduan $whereClause AND status = 'Menunggu'");
+    $menunggu->execute($params);
+    $jmlMenunggu = $menunggu->fetchColumn();
+
+    $proses = $pdo->prepare("SELECT COUNT(*) FROM pengaduan $whereClause AND status = 'Proses'");
+    $proses->execute($params);
+    $jmlProses = $proses->fetchColumn();
+
+    $selesai = $pdo->prepare("SELECT COUNT(*) FROM pengaduan $whereClause AND status = 'Selesai'");
+    $selesai->execute($params);
+    $jmlSelesai = $selesai->fetchColumn();
+
+    // Header
+    $pdf->SetFont('Arial', 'B', 12);
+    $pdf->Cell(0, 6, 'LAPORAN PENGADUAN MASYARAKAT', 0, 1, 'C');
+    $pdf->SetFont('Arial', '', 10);
+    $pdf->Cell(0, 5, 'Periode: ' . $periodeText, 0, 1, 'C');
+    if ($status !== 'all') {
+        $pdf->Cell(0, 5, 'Status: ' . strtoupper($status), 0, 1, 'C');
+    }
+    $pdf->Ln(5);
+
+    // Statistik
+    $pdf->SetFont('Arial', 'B', 9);
+    $pdf->SetFillColor(230, 230, 230);
+    $pdf->Cell(190, 7, ' RINGKASAN STATISTIK', 1, 1, 'L', true);
+
+    $pdf->SetFont('Arial', '', 9);
+    $pdf->SetFillColor(250, 250, 250);
+    $wLabel = 95;
+    $wValue = 95;
+
+    $pdf->Cell($wLabel, 7, ' Total Pengaduan', 1, 0, 'L', true);
+    $pdf->Cell($wValue, 7, ' ' . $totalPengaduan . ' Pengaduan', 1, 1, 'L');
+
+    $pdf->Cell($wLabel, 7, ' Status Menunggu', 1, 0, 'L', true);
+    $pdf->Cell($wValue, 7, ' ' . $jmlMenunggu . ' Pengaduan', 1, 1, 'L');
+
+    $pdf->Cell($wLabel, 7, ' Status Proses', 1, 0, 'L', true);
+    $pdf->Cell($wValue, 7, ' ' . $jmlProses . ' Pengaduan', 1, 1, 'L');
+
+    $pdf->Cell($wLabel, 7, ' Status Selesai', 1, 0, 'L', true);
+    $pdf->Cell($wValue, 7, ' ' . $jmlSelesai . ' Pengaduan', 1, 1, 'L');
+
+    $pdf->Ln(5);
+
+    // Table Header Function
+    $drawHeader = function () use ($pdf) {
+        $pdf->SetFont('Arial', 'B', 8);
+        $pdf->SetFillColor(0, 120, 215);
+        $pdf->SetTextColor(255);
+        $pdf->Cell(8, 7, 'No', 1, 0, 'C', true);
+        $pdf->Cell(28, 7, 'Tanggal', 1, 0, 'C', true);
+        $pdf->Cell(35, 7, 'Nama', 1, 0, 'L', true);
+        $pdf->Cell(25, 7, 'Kategori', 1, 0, 'C', true);
+        $pdf->Cell(40, 7, 'Judul', 1, 0, 'L', true);
+        $pdf->Cell(20, 7, 'Status', 1, 0, 'C', true);
+        $pdf->Cell(34, 7, 'Tanggapan', 1, 1, 'L', true);
+        $pdf->SetTextColor(0);
+        $pdf->SetFont('Arial', '', 7);
+    };
+
+    $pdf->SetFont('Arial', 'B', 10);
+    $pdf->Cell(0, 7, 'DETAIL PENGADUAN', 0, 1, 'L');
+
+    $pdf->SetWidths([8, 28, 35, 25, 40, 20, 34]);
+    $pdf->SetAligns(['C', 'C', 'L', 'C', 'L', 'C', 'L']);
+    $drawHeader();
+    $pdf->SetTableHeaderCallback($drawHeader);
+    $pdf->isPrintingTable = true;
+
+    $stmt = $pdo->prepare("SELECT * FROM pengaduan $whereClause ORDER BY created_at DESC");
+    $stmt->execute($params);
+
+    $no = 1;
+    $found = false;
+    while ($row = $stmt->fetch()) {
+        $found = true;
+        $pdf->Row([
+            $no++,
+            formatFullTime($row['created_at']),
+            $row['nama'] . "\n" . $row['email'],
+            $row['kategori'],
+            $row['judul'],
+            $row['status'],
+            $row['tanggapan'] ?: '-'
+        ]);
+    }
+
+    $pdf->isPrintingTable = false;
+    if (!$found) {
+        $pdf->Cell(190, 8, 'Tidak ada data pada periode ini.', 1, 1, 'C');
+    }
+
+    $pdf->Ln(8);
+
+    // Tanda Tangan
+    $path = '../images/instansi/';
+    $tglCetak = getIndonesianDate();
+    $qrSize = 18;
+
+    $pdf->Cell(95, 5, '', 0, 0);
+    $pdf->Cell(95, 5, 'Pandeglang, ' . $tglCetak, 0, 1, 'C');
+    $pdf->Ln(5);
+
+    $pdf->Cell(95, 5, 'Kepala Tata Usaha,', 0, 0, 'C');
+    $pdf->Cell(95, 5, 'Koordinator Tim Pusdatin,', 0, 1, 'C');
+
+    $yImage = $pdf->GetY() + 1;
+    if (file_exists($path . 'tte-kepala-tata-usaha.png'))
+        $pdf->Image($path . 'tte-kepala-tata-usaha.png', 46, $yImage, $qrSize);
+    if (file_exists($path . 'tte-koordinator-tim-pusdatin.png'))
+        $pdf->Image($path . 'tte-koordinator-tim-pusdatin.png', 146, $yImage, $qrSize);
+
+    $pdf->SetY($yImage + 19);
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->Cell(95, 5, "UMAR MU'TAMAR, S.Ag.", 0, 0, 'C');
+    $pdf->Cell(95, 5, 'YAHYA ZULFIKRI', 0, 1, 'C');
+
+    $pdf->SetFont('Arial', '', 10);
+    $pdf->Cell(95, 4, 'NIP. 196903061998031004', 0, 0, 'C');
+    $pdf->Cell(95, 4, 'NIP. 200001142025211016', 0, 1, 'C');
+
+    $pdf->Output('I', 'Laporan_Pengaduan_' . $month . '_' . $year . '.pdf');
 } catch (Exception $e) {
     die("PDF Error: " . $e->getMessage());
 }
