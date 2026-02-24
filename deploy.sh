@@ -43,7 +43,7 @@ fi
 
 # Build
 log "--- Installing Dependencies ---"
-yarn install --check-files || { log "Yarn install gagal!"; exit 1; }
+yarn install || { log "Yarn install gagal!"; exit 1; }
 
 rm -rf dist/
 ATTEMPT=1
