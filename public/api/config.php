@@ -54,8 +54,8 @@ function getSignatories(): array
             'img'  => $imgBase . (getenv('SIGN_PUSDATIN_IMG') ?: 'tte-koordinator-tim-pusdatin.png'),
         ],
         'kamad' => [
-            'name' => getenv('SIGN_KAMAD_NAME') ?: 'H. EMAN SULAIMAN, S.Ag., M.Pd.',
-            'nip'  => getenv('SIGN_KAMAD_NIP')  ?: '197006032000031002',
+            'name' => getenv('SIGN_KAMAD_NAME') ?: 'Hj. YANTI MARIYAH, S.S., M.Pd.',
+            'nip'  => getenv('SIGN_KAMAD_NIP')  ?: '000000000000000000',
             'role' => 'Kepala Madrasah,',
             'img'  => $imgBase . (getenv('SIGN_KAMAD_IMG') ?: 'tte-kepala-madrasah.png'),
         ],
