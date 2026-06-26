@@ -103,8 +103,8 @@ try {
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO pengaduan 
-                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address) 
+            $stmt = $pdo->prepare("INSERT INTO pengaduan
+                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address)
                 VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :created, :ip)");
 
             while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
@@ -145,8 +145,8 @@ try {
                 'email' => 'ahmad.fauzi@email.com',
                 'telepon' => '081234567890',
                 'kategori' => 'Pelayanan',
-                'judul' => 'Pelayanan PPDB Kurang Informatif',
-                'isi' => 'Mohon informasi PPDB diperjelas di website. Banyak orang tua yang bingung.',
+                'judul' => 'Pelayanan PMBM Kurang Informatif',
+                'isi' => 'Mohon informasi PMBM diperjelas di website. Banyak orang tua yang bingung.',
                 'status' => 'Selesai',
                 'tanggapan' => 'Terima kasih, sudah kami update di website.'
             ],
@@ -192,8 +192,8 @@ try {
             ]
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO pengaduan 
-            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address) 
+        $stmt = $pdo->prepare("INSERT INTO pengaduan
+            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address)
             VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :ip)");
 
         $count = 0;

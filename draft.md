@@ -201,7 +201,7 @@
       "hasChildren": true,
       "children": [
         {
-          "name": "PPDB Online",
+          "name": "PMBM Online",
           "url": "https://daftar.mtsn1pandeglang.sch.id"
         },
         {
@@ -1622,8 +1622,8 @@ const PengaduanForm = () => {
 
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <p className="text-xs text-gray-600 dark:text-gray-300">
-          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti 
-          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon 
+          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti
+          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon
           yang telah didaftarkan.
         </p>
       </div>
@@ -6435,8 +6435,8 @@ const PengaduanForm = () => {
 
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <p className="text-xs text-gray-600 dark:text-gray-300">
-          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti 
-          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon 
+          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti
+          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon
           yang telah didaftarkan.
         </p>
       </div>
@@ -13365,8 +13365,8 @@ try {
                     $successCount++;
                 }
             } elseif ($type === 'survey') {
-                $stmt = $pdo->prepare("INSERT INTO survey_responses 
-                    (respondent_name, respondent_role, score_zi, score_service, score_academic, score_facilities, score_management, score_culture, feedback, created_at, ip_address, details_json) 
+                $stmt = $pdo->prepare("INSERT INTO survey_responses
+                    (respondent_name, respondent_role, score_zi, score_service, score_academic, score_facilities, score_management, score_culture, feedback, created_at, ip_address, details_json)
                     VALUES (:name, :role, :zi, :service, :acad, :fac, :mgt, :cul, :feedback, :created, :ip, '{}')");
 
                 while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
@@ -13525,8 +13525,8 @@ try {
         $pdo->beginTransaction();
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO pengaduan 
-                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address) 
+            $stmt = $pdo->prepare("INSERT INTO pengaduan
+                (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, created_at, ip_address)
                 VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :created, :ip)");
 
             while (($data = fgetcsv($handle, 2000, ",")) !== FALSE) {
@@ -13567,8 +13567,8 @@ try {
                 'email' => 'ahmad.fauzi@email.com',
                 'telepon' => '081234567890',
                 'kategori' => 'Pelayanan',
-                'judul' => 'Pelayanan PPDB Kurang Informatif',
-                'isi' => 'Mohon informasi PPDB diperjelas di website. Banyak orang tua yang bingung.',
+                'judul' => 'Pelayanan PMBM Kurang Informatif',
+                'isi' => 'Mohon informasi PMBM diperjelas di website. Banyak orang tua yang bingung.',
                 'status' => 'Selesai',
                 'tanggapan' => 'Terima kasih, sudah kami update di website.'
             ],
@@ -13614,8 +13614,8 @@ try {
             ]
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO pengaduan 
-            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address) 
+        $stmt = $pdo->prepare("INSERT INTO pengaduan
+            (nama, email, telepon, kategori, judul, isi_pengaduan, status, tanggapan, ip_address)
             VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :status, :tanggapan, :ip)");
 
         $count = 0;
@@ -13713,8 +13713,8 @@ try {
         $isi = htmlspecialchars(strip_tags($data['isi_pengaduan']));
 
         // Insert
-        $stmt = $pdo->prepare("INSERT INTO pengaduan 
-            (nama, email, telepon, kategori, judul, isi_pengaduan, ip_address) 
+        $stmt = $pdo->prepare("INSERT INTO pengaduan
+            (nama, email, telepon, kategori, judul, isi_pengaduan, ip_address)
             VALUES (:nama, :email, :telepon, :kategori, :judul, :isi, :ip)");
 
         $stmt->execute([
@@ -15293,4 +15293,3 @@ export default defineConfig({
 ```
 
 ---
-
