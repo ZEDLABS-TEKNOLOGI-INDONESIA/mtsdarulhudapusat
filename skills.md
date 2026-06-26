@@ -1,7 +1,7 @@
 # README
 # MTsN 1 Pandeglang — Website Resmi
 
-> **Mandiri, Takwa, Peduli Lingkungan, Prestasi**
+> **Harmonis, Elok, Berprestasi, Agamis, Terdepan**
 
 Website resmi MTsN 1 Pandeglang dibangun dengan [Astro](https://astro.build/) sebagai static site generator, React untuk komponen interaktif, dan Tailwind CSS untuk styling. Dilengkapi fitur PWA, CMS berbasis PHP, sistem pengaduan, dan survei kepuasan layanan.
 

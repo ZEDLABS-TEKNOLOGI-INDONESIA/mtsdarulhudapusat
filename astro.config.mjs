@@ -2,13 +2,13 @@ import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import sitemap from "@astrojs/sitemap";
 import tailwindcss from "@tailwindcss/vite";
+import AstroPWA from "@vite-pwa/astro";
 import AutoImport from "astro-auto-import";
 import { defineConfig } from "astro/config";
 import remarkCollapse from "remark-collapse";
 import remarkToc from "remark-toc";
 import sharp from "sharp";
 import config from "./src/config/config.json";
-import AstroPWA from "@vite-pwa/astro";
 
 export default defineConfig({
   site: config.site.base_url
@@ -38,7 +38,7 @@ export default defineConfig({
       manifest: {
         name: "Madrasah Tsanawiyah Negeri 1 Pandeglang",
         short_name: "MTs Negeri 1 Pandeglang",
-        description: "Mandiri, Takwa, Peduli Lingkungan, Prestasi.",
+        description: "Harmonis, Elok, Berprestasi, Agamis, Terdepan.",
         theme_color: "#00dc82",
         background_color: "#ffffff",
         display: "standalone",

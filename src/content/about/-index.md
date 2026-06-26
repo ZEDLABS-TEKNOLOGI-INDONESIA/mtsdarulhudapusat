@@ -32,4 +32,4 @@ Menciptakan budaya keunggulan tanpa henti. Kami memfasilitasi setiap potensi uni
 
 Melalui dedikasi tenaga pendidik profesional dan transformasi digital yang berkelanjutan, kami berkomitmen mencetak pemimpin masa depan yang paripurna.
 
-> _Mandiri, Takwa, Peduli Lingkungan, Prestasi_
+> _Harmonis, Elok, Berprestasi, Agamis, Terdepan_

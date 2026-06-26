@@ -15099,7 +15099,7 @@ export default defineConfig({
       manifest: {
         name: "Madrasah Tsanawiyah Negeri 1 Pandeglang",
         short_name: "MTs Negeri 1 Pandeglang",
-        description: "Mandiri, Takwa, Peduli Lingkungan, Prestasi.",
+        description: "Harmonis, Elok, Berprestasi, Agamis, Terdepan.",
         theme_color: "#00dc82",
         background_color: "#ffffff",
         display: "standalone",
@@ -15191,7 +15191,7 @@ export default defineConfig({
 {
   "name": "mtsn1pandeglang",
   "version": "0.0.1",
-  "description": "Mandiri, Takwa, Peduli Lingkungan, Prestasi",
+  "description": "Harmonis, Elok, Berprestasi, Agamis, Terdepan",
   "author": "Yahya Zulfikri",
   "license": "MIT",
   "private": true,

@@ -6,7 +6,7 @@
     "role": "Fullstack Developer",
     "phone": "62895351856267"
   },
-  "description": "Mandiri, Takwa, Peduli Lingkungan, Prestasi.",
+  "description": "Harmonis, Elok, Berprestasi, Agamis, Terdepan.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -47,5 +47,7 @@
       "form_factor": "narrow"
     }
   ],
-  "categories": ["education"]
+  "categories": [
+    "education"
+  ]
 }
