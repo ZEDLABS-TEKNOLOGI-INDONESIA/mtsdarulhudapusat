@@ -1,14 +1,14 @@
 ---
 import ImageMod from "@/components/ImageMod.astro";
 import Base from "@/layouts/Base.astro";
+import TawkChat from "@/layouts/helpers/TawkChat";
+import VideoModal from "@/layouts/helpers/VideoModal";
 import { getListPage } from "@/lib/contentParser.astro";
 import { markdownify } from "@/lib/utils/textConverter";
 import CallToAction from "@/partials/CallToAction.astro";
-import Testimonial from "@/partials/Testimonial.astro";
 import LatestPostsSlider from "@/partials/LatestPostsSlider.astro";
+import Testimonial from "@/partials/Testimonial.astro";
 import { FaCheck } from "react-icons/fa";
-import VideoModal from "@/layouts/helpers/VideoModal";
-import TawkChat from "@/layouts/helpers/TawkChat";
 
 const homepage = await getListPage("homepage", "-index");
 const call_to_action = await getListPage("ctaSection", "call-to-action");
@@ -22,10 +22,7 @@ const { banner, features } = homepage.data;
     <div class="container">
       <div class="row justify-center">
         <div class="lg:col-7 md:col-9 mb-8 text-center gsap-fade-up">
-          <h1
-            set:html={markdownify(banner.title)}
-            class="mb-4 text-h3 lg:text-h1"
-          />
+          <h1 set:html={markdownify(banner.title)} class="mb-4 text-h3 lg:text-h1" />
           <p set:html={markdownify(banner.content)} class="mb-8" />
           {
             banner.button.enable && (
@@ -33,36 +30,51 @@ const { banner, features } = homepage.data;
                 <a
                   class="btn btn-primary mb-4"
                   href={banner.button.link}
-                  target={
-                    banner.button.link.startsWith("http") ? "_blank" : "_self"
-                  }
+                  target={banner.button.link.startsWith("http") ? "_blank" : "_self"}
                   rel="noopener"
                 >
                   {banner.button.label}
                 </a>
 
-                <VideoModal
-                  client:load
-                  videoId="q5ECbq5EuuE"
-                  label="Selayang Pandang"
-                />
+                <VideoModal client:load videoId="q5ECbq5EuuE" label="Selayang Pandang" />
               </div>
             )
           }
         </div>
         {
           banner.image && (
-            <div class="col-12 gsap-hero-image">
-              <ImageMod
-                src={banner.image}
-                height={380}
-                width={1200}
-                alt="banner"
-                format="webp"
-              />
+            <div class="col-12 gsap-hero-image flex justify-center">
+              <div class="relative w-full overflow-hidden rounded-2xl bg-black">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <img
+                    src={`/images/assets/banner-${i}.png`}
+                    alt={`banner-${i}`}
+                    class="banner-slide absolute inset-0 h-full w-full object-contain opacity-0 transition-opacity duration-1000"
+                    data-index={i - 1}
+                  />
+                ))}
+                <img src="/images/assets/banner-1.png" alt="banner" class="invisible w-full" />
+              </div>
             </div>
           )
         }
+
+        <script>
+          const slides = document.querySelectorAll(".banner-slide");
+          let current = 0;
+
+          function showSlide(index: number) {
+            slides.forEach((slide) => slide.classList.remove("opacity-100"));
+            slides[index].classList.add("opacity-100");
+          }
+
+          showSlide(0);
+
+          setInterval(() => {
+            current = (current + 1) % slides.length;
+            showSlide(current);
+          }, 3000);
+        </script>
       </div>
     </div>
   </section>
@@ -71,11 +83,8 @@ const { banner, features } = homepage.data;
     <div class="container">
       <div class="mb-12 text-center">
         <h2 class="h2 gsap-fade-up">Keunggulan Kami</h2>
-        <p
-          class="mt-4 text-text-light dark:text-darkmode-text-light gsap-fade-up"
-        >
-          Mengapa MTs Negeri 1 Pandeglang adalah pilihan terbaik untuk masa
-          depan putra-putri Anda.
+        <p class="mt-4 text-text-light dark:text-darkmode-text-light gsap-fade-up">
+          Mengapa MTs Negeri 1 Pandeglang adalah pilihan terbaik untuk masa depan putra-putri Anda.
         </p>
       </div>
 
@@ -120,20 +129,17 @@ const { banner, features } = homepage.data;
 
                       {feature.bulletpoints && (
                         <ul class="mb-6 space-y-2">
-                          {feature.bulletpoints
-                            .slice(0, isWide ? 4 : 2)
-                            .map((bullet: string) => (
-                              <li class="flex items-start text-sm">
-                                <span class="mr-2 mt-1 text-primary">
-                                  <FaCheck />
-                                </span>
-                                <span>{bullet}</span>
-                              </li>
-                            ))}
+                          {feature.bulletpoints.slice(0, isWide ? 4 : 2).map((bullet: string) => (
+                            <li class="flex items-start text-sm">
+                              <span class="mr-2 mt-1 text-primary">
+                                <FaCheck />
+                              </span>
+                              <span>{bullet}</span>
+                            </li>
+                          ))}
                           {feature.bulletpoints.length > (isWide ? 4 : 2) && (
                             <li class="text-xs text-text-light italic">
-                              + {feature.bulletpoints.length - (isWide ? 4 : 2)}{" "}
-                              poin lainnya
+                              + {feature.bulletpoints.length - (isWide ? 4 : 2)} poin lainnya
                             </li>
                           )}
                         </ul>
