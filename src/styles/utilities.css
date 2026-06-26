@@ -28,8 +28,6 @@
   animation: slide-up 0.3s ease-out;
 }
 
-/* Tambahkan di bawah ini */
-/* Suppress Tawk.to Font Warnings */
 @font-face {
   font-family: "tawk-icon";
   font-display: optional;

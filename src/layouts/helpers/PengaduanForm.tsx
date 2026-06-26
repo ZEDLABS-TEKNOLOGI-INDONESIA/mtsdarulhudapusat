@@ -88,10 +88,7 @@ const PengaduanForm = () => {
           Pengaduan Terkirim!
         </h3>
         <p className="mb-6 text-sm text-text-light">{message}</p>
-        <button
-          onClick={() => setStatus("idle")}
-          className="btn btn-primary"
-        >
+        <button onClick={() => setStatus("idle")} className="btn btn-primary">
           Kirim Pengaduan Lain
         </button>
       </div>
@@ -235,9 +232,9 @@ const PengaduanForm = () => {
 
       <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
         <p className="text-xs text-gray-600 dark:text-gray-300">
-          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan ditindaklanjuti 
-          maksimal 3x24 jam. Kami akan menghubungi Anda melalui email atau telepon 
-          yang telah didaftarkan.
+          <strong>Catatan:</strong> Pengaduan Anda akan kami proses dan
+          ditindaklanjuti maksimal 3x24 jam. Kami akan menghubungi Anda melalui
+          email atau telepon yang telah didaftarkan.
         </p>
       </div>
     </div>
