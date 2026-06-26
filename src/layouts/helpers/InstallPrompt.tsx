@@ -1,4 +1,3 @@
-import type { ReactElement } from "react";
 import { useEffect, useState } from "react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -102,7 +101,7 @@ const InstallPrompt = () => {
               <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
                 {isIOS
                   ? "Bagikan → Tambah ke Home Screen untuk akses lebih cepat!"
-                  : "Install MTs Negeri 1 Pandeglang untuk akses lebih cepat dan bisa digunakan offline!"}
+                  : "Install MTs Darul Huda Pusat untuk akses lebih cepat dan bisa digunakan offline!"}
               </p>
 
               <div className="flex gap-2">

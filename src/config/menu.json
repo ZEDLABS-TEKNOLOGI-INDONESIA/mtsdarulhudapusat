@@ -27,15 +27,15 @@
         },
         {
           "name": "Personil",
-          "url": "https://lulus.mtsn1pandeglang.sch.id/personil"
+          "url": "https://lulus.mtsdarulhudapusat.sch.id/personil"
         },
         {
           "name": "Data Alumni",
-          "url": "https://lulus.mtsn1pandeglang.sch.id/alumni"
+          "url": "https://lulus.mtsdarulhudapusat.sch.id/alumni"
         },
         {
           "name": "Dokumentasi",
-          "url": "https://dokumentasi.mtsn1pandeglang.sch.id"
+          "url": "https://dokumentasi.mtsdarulhudapusat.sch.id"
         }
       ]
     },
@@ -135,31 +135,31 @@
       "children": [
         {
           "name": "Pendaftaran Online",
-          "url": "https://daftar.mtsn1pandeglang.sch.id"
+          "url": "https://daftar.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Rapor Digital (RDM)",
-          "url": "https://rdm.mtsn1pandeglang.sch.id"
+          "url": "https://rdm.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Computer Based Test (CBT)",
-          "url": "https://cbt.mtsn1pandeglang.sch.id"
+          "url": "https://cbt.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Presensi Online",
-          "url": "https://presensi.mtsn1pandeglang.sch.id"
+          "url": "https://presensi.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Perpustakaan",
-          "url": "https://perpustakaan.mtsn1pandeglang.sch.id"
+          "url": "https://perpustakaan.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Bank Data",
-          "url": "https://drive.mtsn1pandeglang.sch.id"
+          "url": "https://drive.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Layanan Kelulusan",
-          "url": "https://lulus.mtsn1pandeglang.sch.id"
+          "url": "https://lulus.mtsdarulhudapusat.sch.id"
         }
       ]
     }

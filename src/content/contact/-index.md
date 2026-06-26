@@ -1,7 +1,7 @@
 ---
 title: "Kontak Kami"
-description: "Kontak MTs Negeri 1 Pandeglang"
-meta_title: "Kontak MTs Negeri 1 Pandeglang"
+description: "Kontak MTs Darul Huda Pusat"
+meta_title: "Kontak MTs Darul Huda Pusat"
 draft: false
 image: ""
 ---

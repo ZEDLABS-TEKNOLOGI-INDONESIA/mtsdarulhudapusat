@@ -1,7 +1,7 @@
 {
   "site": {
-    "title": "MTs Negeri 1 Pandeglang",
-    "base_url": "https://mtsn1pandeglang.sch.id",
+    "title": "MTs Darul Huda Pusat",
+    "base_url": "https://mtsdarulhudapusat.sch.id",
     "base_path": "/",
     "trailing_slash": false,
     "favicon": "/images/favicon.png",
@@ -9,9 +9,8 @@
     "logo_darkmode": "/images/brand-darkmode.png",
     "logo_width": "220",
     "logo_height": "25",
-    "logo_text": "Logo MTs Negeri 1 Pandeglang"
+    "logo_text": "Logo MTs Darul Huda Pusat"
   },
-
   "settings": {
     "search": true,
     "sticky_header": true,
@@ -21,26 +20,22 @@
     "summary_length": 200,
     "blog_folder": "blog"
   },
-
   "params": {
     "contact_form_action": "#",
-    "copyright": "[**&copy; 2022 - 2026 Madrasah Tsanawiyah Negeri 1 Pandeglang**](/)<br/>Dikelola Sepenuhnya oleh [**Tim Pusdatin**](https://github.com/zulfikriyahya)"
+    "copyright": "[**&copy; 2022 - 2026 MTs Darul Huda Pusat**](/)<br/>Dikelola Sepenuhnya oleh [**Tim Pusdatin**](https://github.com/zulfikriyahya)"
   },
-
   "navigation_button": {
     "enable": true,
     "label": "Daftar Sekarang",
-    "link": "https://daftar.mtsn1pandeglang.sch.id"
+    "link": "https://daftar.mtsdarulhudapusat.sch.id"
   },
-
   "google_tag_manager": {
     "enable": true,
     "gtm_id": "G-31LVR4XF5F"
   },
-
   "metadata": {
     "meta_author": "Yahya Zulfikri",
     "meta_image": "/images/authors/yahya-zulfikri.png",
-    "meta_description": "Petugas Pengelola Administrasi Belanja Pegawai (PPABP), Customer Service Officer (CSO), Web Developer, System Administrator di MTs Negeri 1 Pandeglang"
+    "meta_description": "Petugas Pengelola Administrasi Belanja Pegawai (PPABP), Customer Service Officer (CSO), Web Developer, System Administrator di MTs Darul Huda Pusat"
   }
 }

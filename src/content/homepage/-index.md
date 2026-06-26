@@ -2,18 +2,18 @@
 # Banner
 banner:
   title: "Mewujudkan Generasi Cendekia & Berkarakter Mulia"
-  content: "Selamat datang di MTs Negeri 1 Pandeglang. Kami memadukan keunggulan akademik, kematangan spiritual, dan teknologi modern untuk mempersiapkan putra-putri Anda menjadi pemimpin masa depan yang kompeten dan berakhlak."
+  content: "Selamat datang di MTs Darul Huda Pusat. Kami memadukan keunggulan akademik, kematangan spiritual, dan teknologi modern untuk mempersiapkan putra-putri Anda menjadi pemimpin masa depan yang kompeten dan berakhlak."
   image: "/images/assets/banner.png"
   button:
     enable: true
     label: "Bergabung Bersama Kami"
-    link: "https://daftar.mtsn1pandeglang.sch.id"
+    link: "https://daftar.mtsdarulhudapusat.sch.id"
 
 # Fitur (Optimized for Bento Grid Layout)
 features:
   - title: "Akreditasi Unggul (A)"
     image: "/images/assets/akreditasi.png"
-    content: "Bukti nyata komitmen kami terhadap mutu pendidikan. MTs Negeri 1 Pandeglang telah memenuhi standar nasional pendidikan tertinggi dengan predikat A (Unggul), menjamin kualitas pengajaran, manajemen, dan kelulusan yang kredibel."
+    content: "Bukti nyata komitmen kami terhadap mutu pendidikan. MTs Darul Huda Pusat telah memenuhi standar nasional pendidikan tertinggi dengan predikat A (Unggul), menjamin kualitas pengajaran, manajemen, dan kelulusan yang kredibel."
     bulletpoints:
       - "Terakreditasi A (Unggul) oleh BAN-S/M"
       - "Standar Manajemen ISO Pendidikan"
@@ -51,7 +51,7 @@ features:
 
   - title: "Mengapa Memilih Kami?"
     image: "/images/assets/program.png"
-    content: "MTs Negeri 1 Pandeglang bukan sekadar madrasah, melainkan inkubator masa depan. Kami fokus pada pembentukan karakter (Character Building) yang kuat, kemandirian, dan prestasi. Lulusan kami terbukti mampu bersaing di jenjang pendidikan favorit dan memiliki pondasi agama yang kokoh."
+    content: "MTs Darul Huda Pusat bukan sekadar madrasah, melainkan inkubator masa depan. Kami fokus pada pembentukan karakter (Character Building) yang kuat, kemandirian, dan prestasi. Lulusan kami terbukti mampu bersaing di jenjang pendidikan favorit dan memiliki pondasi agama yang kokoh."
     bulletpoints:
       - "Track Record Prestasi Akademik & Non-Akademik"
       - "Budaya Sekolah yang Inklusif & Disiplin"

@@ -13,7 +13,7 @@ import config from "./src/config/config.json";
 export default defineConfig({
   site: config.site.base_url
     ? config.site.base_url
-    : "https://mtsn1pandeglang.sch.id",
+    : "https://mtsdarulhudapusat.sch.id",
   base: config.site.base_path ? config.site.base_path : "/",
   trailingSlash: config.site.trailing_slash ? "always" : "never",
   image: { service: sharp() },
@@ -36,8 +36,8 @@ export default defineConfig({
     AstroPWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Madrasah Tsanawiyah Negeri 1 Pandeglang",
-        short_name: "MTs Negeri 1 Pandeglang",
+        name: "MTs Darul Huda Pusat",
+        short_name: "MTs Darul Huda Pusat",
         description: "Harmonis, Elok, Berprestasi, Agamis, Terdepan.",
         theme_color: "#00dc82",
         background_color: "#ffffff",

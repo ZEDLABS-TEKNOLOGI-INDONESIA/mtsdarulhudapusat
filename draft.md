@@ -5,8 +5,8 @@
 ```json
 {
   "site": {
-    "title": "MTs Negeri 1 Pandeglang",
-    "base_url": "https://mtsn1pandeglang.sch.id",
+    "title": "MTs Darul Huda Pusat",
+    "base_url": "https://mtsdarulhudapusat.sch.id",
     "base_path": "/",
     "trailing_slash": false,
     "favicon": "/images/favicon.png",
@@ -14,7 +14,7 @@
     "logo_darkmode": "/images/brand-darkmode.png",
     "logo_width": "220",
     "logo_height": "25",
-    "logo_text": "Logo MTs Negeri 1 Pandeglang"
+    "logo_text": "Logo MTs Darul Huda Pusat"
   },
 
   "settings": {
@@ -29,13 +29,13 @@
 
   "params": {
     "contact_form_action": "#",
-    "copyright": "[**&copy; 2022 - 2026 Madrasah Tsanawiyah Negeri 1 Pandeglang**](/)<br/>Dikelola Sepenuhnya oleh [**Tim Pusdatin**](https://github.com/zulfikriyahya)"
+    "copyright": "[**&copy; 2022 - 2026 MTs Darul Huda Pusat**](/)<br/>Dikelola Sepenuhnya oleh [**Tim Pusdatin**](https://github.com/zulfikriyahya)"
   },
 
   "navigation_button": {
     "enable": true,
     "label": "Daftar Sekarang",
-    "link": "https://daftar.mtsn1pandeglang.sch.id"
+    "link": "https://daftar.mtsdarulhudapusat.sch.id"
   },
 
   "google_tag_manager": {
@@ -46,7 +46,7 @@
   "metadata": {
     "meta_author": "Yahya Zulfikri",
     "meta_image": "/images/authors/yahya-zulfikri.png",
-    "meta_description": "Petugas Pengelola Administrasi Belanja Pegawai (PPABP), Customer Service Officer (CSO), Web Developer, System Administrator di MTs Negeri 1 Pandeglang"
+    "meta_description": "Petugas Pengelola Administrasi Belanja Pegawai (PPABP), Customer Service Officer (CSO), Web Developer, System Administrator di MTs Darul Huda Pusat"
   }
 }
 
@@ -202,31 +202,31 @@
       "children": [
         {
           "name": "PMBM Online",
-          "url": "https://daftar.mtsn1pandeglang.sch.id"
+          "url": "https://daftar.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Rapor Digital (RDM)",
-          "url": "https://rdm.mtsn1pandeglang.sch.id"
+          "url": "https://rdm.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "E-Learning / CBT",
-          "url": "https://cbt.mtsn1pandeglang.sch.id"
+          "url": "https://cbt.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Presensi Online (POL)",
-          "url": "https://presensi.mtsn1pandeglang.sch.id"
+          "url": "https://presensi.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Perpustakaan Digital",
-          "url": "https://perpustakaan.mtsn1pandeglang.sch.id"
+          "url": "https://perpustakaan.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Bank Data",
-          "url": "https://drive.mtsn1pandeglang.sch.id"
+          "url": "https://drive.mtsdarulhudapusat.sch.id"
         },
         {
           "name": "Pemutakhiran Data Mandiri (PDM)",
-          "url": "https://pdm.mtsn1pandeglang.sch.id"
+          "url": "https://pdm.mtsdarulhudapusat.sch.id"
         }
       ]
     }
@@ -273,12 +273,12 @@
     {
       "name": "email",
       "icon": "FaEnvelope",
-      "link": "mailto:dev@mtsn1pandeglang.sch.id"
+      "link": "mailto:dev@mtsdarulhudapusat.sch.id"
     },
     {
       "name": "whatsapp",
       "icon": "FaWhatsapp",
-      "link": "https://wa.me/62895351856267/?text=Hallo, PTSP MTs Negeri 1 Pandeglang. 👋"
+      "link": "https://wa.me/62895351856267/?text=Hallo, PTSP MTs Darul Huda Pusat. 👋"
     }
   ]
 }
@@ -6017,7 +6017,7 @@ const GiscusComment = () => {
         category="General"
         categoryId="DIC_kwDOOC18-s4C0zja"
         mapping="pathname"
-        term="Komentar di MTsN 1 Pandeglang"
+        term="Komentar di MTs Darul Huda Pusat"
         reactionsEnabled="1"
         emitMetadata="0"
         inputPosition="top"
@@ -6142,7 +6142,7 @@ const InstallPrompt = () => {
               <p className="mb-3 text-sm text-gray-600 dark:text-gray-300">
                 {isIOS
                   ? "Bagikan → Tambah ke Home Screen untuk akses lebih cepat!"
-                  : "Install MTs Negeri 1 Pandeglang untuk akses lebih cepat dan bisa digunakan offline!"}
+                  : "Install MTs Darul Huda Pusat untuk akses lebih cepat dan bisa digunakan offline!"}
               </p>
 
               <div className="flex gap-2">
@@ -9310,7 +9310,7 @@ const { tags, categories, allCategories } = Astro.props;
   <div class="mb-8">
     <div class="rounded bg-light p-8 dark:bg-darkmode-light">
       <ul class="space-y-4">
-        <h5 class="text-center">Sambutan Kepala MTs Negeri 1 Pandeglang</h5>
+        <h5 class="text-center">Sambutan Kepala MTs Darul Huda Pusat</h5>
         <img
           src="/images/assets/kepala-madrasah.png"
           width="100%"
@@ -9324,16 +9324,16 @@ const { tags, categories, allCategories } = Astro.props;
           jawab untuk mendidik generasi muda yang berkualitas dan tanggap
           terhadap perkembangan ilmu pengetahuan dan teknologi di era
           globalisasi ini. Internet menjadi jendela utama untuk melihat dunia.
-          MTs Negeri 1 Pandeglang telah memiliki fasilitas ini, oleh karena itu
+          MTs Darul Huda Pusat telah memiliki fasilitas ini, oleh karena itu
           kami akan menampilkan segala hal yang ada dan terjadi di lembaga kami,
           sehingga dunia dapat melihat kondisi, kegiatan, prestasi, dan kemajuan
           yang ada di sini. Kami sangat mengharapkan kritik dan saran dari
-          berbagai pihak demi kebaikan dan kemajuan MTs Negeri 1 Pandeglang.
+          berbagai pihak demi kebaikan dan kemajuan MTs Darul Huda Pusat.
           Untuk seluruh civitas akademika, mari kita bersama-sama ukir prestasi
           demi kejayaan madrasah kita. Amin.
         </li>
         <li class="text-center">
-          <b>Kepala MTs Negeri 1 Pandeglang</b>
+          <b>Kepala MTs Darul Huda Pusat</b>
           <br />
           <b>H. Eman Sulaiman, S.Ag., M.Pd.</b>
           <br />
@@ -10307,7 +10307,7 @@ import AdminDashboard from "@/layouts/helpers/AdminDashboard";
 
 <Base
   title="Admin Dashboard"
-  meta_title="Admin Panel - MTsN 1 Pandeglang"
+  meta_title="Admin Panel - MTs Darul Huda Pusat"
   noindex={true}
 >
   <section class="section-sm bg-gray-50 dark:bg-darkmode-body min-h-screen">
@@ -10902,7 +10902,7 @@ const { banner, features } = homepage.data;
         <p
           class="mt-4 text-text-light dark:text-darkmode-text-light gsap-fade-up"
         >
-          Mengapa MTs Negeri 1 Pandeglang adalah pilihan terbaik untuk masa
+          Mengapa MTs Darul Huda Pusat adalah pilihan terbaik untuk masa
           depan putra-putri Anda.
         </p>
       </div>
@@ -11026,7 +11026,7 @@ import PengaduanForm from "@/layouts/helpers/PengaduanForm";
 
 const title = "Pengaduan Masyarakat";
 const description =
-  "Sampaikan keluhan, kritik, atau saran Anda terkait pelayanan dan kegiatan di MTs Negeri 1 Pandeglang.";
+  "Sampaikan keluhan, kritik, atau saran Anda terkait pelayanan dan kegiatan di MTs Darul Huda Pusat.";
 ---
 
 <Base title={title} meta_title={title} description={description}>
@@ -11040,7 +11040,7 @@ const description =
             <p class="text-lg">
               Sistem pengaduan ini dirancang untuk menerima masukan, keluhan,
               dan saran dari masyarakat terkait pelayanan di <strong
-                >MTs Negeri 1 Pandeglang</strong
+                >MTs Darul Huda Pusat</strong
               >. Kami berkomitmen untuk menindaklanjuti setiap pengaduan dengan
               serius dan profesional.
             </p>
@@ -11066,7 +11066,7 @@ import SurveyWizard from "@/layouts/helpers/SurveyWizard";
 
 const title = "Survei Kepuasan Masyarakat";
 const description =
-  "Bantu kami meningkatkan kualitas layanan MTs Negeri 1 Pandeglang dengan mengisi survei kepuasan pelanggan secara online.";
+  "Bantu kami meningkatkan kualitas layanan MTs Darul Huda Pusat dengan mengisi survei kepuasan pelanggan secara online.";
 ---
 
 <Base title={title} meta_title={title} description={description}>
@@ -11080,7 +11080,7 @@ const description =
             <p class="text-lg">
               Survei ini bertujuan untuk mengukur tingkat kepuasan masyarakat
               terhadap penyelenggaraan pelayanan publik di <strong
-                >MTs Negeri 1 Pandeglang</strong
+                >MTs Darul Huda Pusat</strong
               >. Identitas dan jawaban Anda dijamin kerahasiaannya.
             </p>
           </div>
@@ -13915,7 +13915,7 @@ class PDF extends FPDF
         $this->Cell(0, 6, 'MADRASAH TSANAWIYAH NEGERI 1 PANDEGLANG', 0, 1, 'C');
         $this->SetFont('Arial', '',   9);
         $this->Cell(0, 4, 'Jl. Raya Labuan Km. 5,7 Palurahan, Kaduhejo, Pandeglang - Banten 42253', 0, 1, 'C');
-        $this->Cell(0, 4, 'Website: https://mtsn1pandeglang.sch.id | Email: adm@mtsn1pandeglang.sch.id', 0, 1, 'C');
+        $this->Cell(0, 4, 'Website: https://mtsdarulhudapusat.sch.id | Email: adm@mtsdarulhudapusat.sch.id', 0, 1, 'C');
 
         $this->SetLineWidth(0.5);
         $this->Line(10, 39, 200, 39);
@@ -13928,7 +13928,7 @@ class PDF extends FPDF
     {
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 8);
-        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTsN 1 Pandeglang | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
+        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTs Darul Huda Pusat | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
     }
 
     public function Row(array $data, bool $fill = false): void
@@ -14399,7 +14399,7 @@ class PDF extends FPDF
         $this->Cell(0, 6, 'MADRASAH TSANAWIYAH NEGERI 1 PANDEGLANG', 0, 1, 'C');
         $this->SetFont('Arial', '',   9);
         $this->Cell(0, 4, 'Jl. Raya Labuan Km. 5,7 Palurahan, Kaduhejo, Pandeglang - Banten 42253', 0, 1, 'C');
-        $this->Cell(0, 4, 'Website: https://mtsn1pandeglang.sch.id | Email: adm@mtsn1pandeglang.sch.id', 0, 1, 'C');
+        $this->Cell(0, 4, 'Website: https://mtsdarulhudapusat.sch.id | Email: adm@mtsdarulhudapusat.sch.id', 0, 1, 'C');
 
         $this->SetLineWidth(0.5);
         $this->Line(10, 39, 200, 39);
@@ -14412,7 +14412,7 @@ class PDF extends FPDF
     {
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 8);
-        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTsN 1 Pandeglang | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
+        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTs Darul Huda Pusat | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
     }
 
     public function Row(array $data, bool $fill = false): void
@@ -15045,7 +15045,7 @@ SIGN_PUSDATIN_NIP=200001142025211016
 SIGN_PUSDATIN_IMG=tte-koordinator-tim-pusdatin.png
 
 # Kepala Madrasah
-SIGN_KAMAD_NAME="Hj. YANTI MARIYAH, S.S., M.Pd."
+SIGN_KAMAD_NAME="Erwan Kurtubi, S.S., M.Pd."
 SIGN_KAMAD_NIP=000000000000000000
 SIGN_KAMAD_IMG=tte-kepala-madrasah.png
 
@@ -15074,7 +15074,7 @@ import AstroPWA from "@vite-pwa/astro";
 export default defineConfig({
   site: config.site.base_url
     ? config.site.base_url
-    : "https://mtsn1pandeglang.sch.id",
+    : "https://mtsdarulhudapusat.sch.id",
   base: config.site.base_path ? config.site.base_path : "/",
   trailingSlash: config.site.trailing_slash ? "always" : "never",
   image: { service: sharp() },
@@ -15097,8 +15097,8 @@ export default defineConfig({
     AstroPWA({
       registerType: "autoUpdate",
       manifest: {
-        name: "Madrasah Tsanawiyah Negeri 1 Pandeglang",
-        short_name: "MTs Negeri 1 Pandeglang",
+        name: "MTs Darul Huda Pusat",
+        short_name: "MTs Darul Huda Pusat",
         description: "Harmonis, Elok, Berprestasi, Agamis, Terdepan.",
         theme_color: "#00dc82",
         background_color: "#ffffff",

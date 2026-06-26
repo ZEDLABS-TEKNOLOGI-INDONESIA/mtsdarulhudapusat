@@ -1,6 +1,6 @@
 ---
 title: Yahya Zulfikri
-email: dev@mtsn1pandeglang.sch.id
+email: dev@mtsdarulhudapusat.sch.id
 image: "/images/authors/yahya-zulfikri.png"
 description: Lead Developer & System Administrator
 social:

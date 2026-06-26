@@ -1,18 +1,18 @@
 ---
 title: "Tentang Kami"
-meta_title: "Profil MTs Negeri 1 Pandeglang"
-description: "MTs Negeri 1 Pandeglang: Inkubator generasi unggul dengan semangat Harmonis, Elok, Berprestasi, Agamis, dan Terdepan."
+meta_title: "Profil MTs Darul Huda Pusat"
+description: "MTs Darul Huda Pusat: Inkubator generasi unggul dengan semangat Harmonis, Elok, Berprestasi, Agamis, dan Terdepan."
 image: "/images/logo.png"
 draft: false
 ---
 
-### MTs Negeri 1 Pandeglang
+### MTs Darul Huda Pusat
 
 #### Inkubator Generasi Cendekia & Berkarakter
 
 ---
 
-Kami hadir bukan sekadar sebagai ruang kelas, melainkan sebagai ekosistem pendidikan holistik yang menyatukan tradisi keilmuan dengan kemuliaan adab. Di MTs Negeri 1 Pandeglang, kami merajut kecerdasan intelektual, kematangan spiritual, dan kepekaan sosial dalam satu sinergi yang harmonis.
+Kami hadir bukan sekadar sebagai ruang kelas, melainkan sebagai ekosistem pendidikan holistik yang menyatukan tradisi keilmuan dengan kemuliaan adab. Di MTs Darul Huda Pusat, kami merajut kecerdasan intelektual, kematangan spiritual, dan kepekaan sosial dalam satu sinergi yang harmonis.
 Identitas kami terukir kokoh dalam lima pilar nilai yang menjadi denyut nadi kehidupan madrasah:
 
 **HARMONIS**

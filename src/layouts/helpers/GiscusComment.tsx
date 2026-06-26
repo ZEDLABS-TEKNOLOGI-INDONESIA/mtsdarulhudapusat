@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
 import Giscus from "@giscus/react";
+import { useEffect, useState } from "react";
 
 const GiscusComment = () => {
   const [theme, setTheme] = useState("light");
@@ -39,7 +39,7 @@ const GiscusComment = () => {
         category="General"
         categoryId="DIC_kwDOOC18-s4C0zja"
         mapping="pathname"
-        term="Komentar di MTsN 1 Pandeglang"
+        term="Komentar di MTs Darul Huda Pusat"
         reactionsEnabled="1"
         emitMetadata="0"
         inputPosition="top"

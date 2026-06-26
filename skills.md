@@ -1,9 +1,9 @@
 # README
-# MTsN 1 Pandeglang — Website Resmi
+# MTs Darul Huda Pusat — Website Resmi
 
 > **Harmonis, Elok, Berprestasi, Agamis, Terdepan**
 
-Website resmi MTsN 1 Pandeglang dibangun dengan [Astro](https://astro.build/) sebagai static site generator, React untuk komponen interaktif, dan Tailwind CSS untuk styling. Dilengkapi fitur PWA, CMS berbasis PHP, sistem pengaduan, dan survei kepuasan layanan.
+Website resmi MTs Darul Huda Pusat dibangun dengan [Astro](https://astro.build/) sebagai static site generator, React untuk komponen interaktif, dan Tailwind CSS untuk styling. Dilengkapi fitur PWA, CMS berbasis PHP, sistem pengaduan, dan survei kepuasan layanan.
 
 ---
 
@@ -399,7 +399,7 @@ scripts/
 
 # Skills & Project Convention Reference
 
-Dokumen ini digunakan sebagai konteks bagi AI assistant saat membantu pengembangan project **MTsN 1 Pandeglang**. Baca dokumen ini sebelum memberikan saran kode atau arsitektur.
+Dokumen ini digunakan sebagai konteks bagi AI assistant saat membantu pengembangan project **MTs Darul Huda Pusat**. Baca dokumen ini sebelum memberikan saran kode atau arsitektur.
 
 ---
 
@@ -416,7 +416,7 @@ Dokumen ini digunakan sebagai konteks bagi AI assistant saat membantu pengembang
 
 | Atribut | Detail |
 |---|---|
-| Nama | MTsN 1 Pandeglang |
+| Nama | MTs Darul Huda Pusat |
 | Framework | Astro 5 + React 19 |
 | Styling | Tailwind CSS 4 |
 | Package Manager | Yarn 3 (Berry) |

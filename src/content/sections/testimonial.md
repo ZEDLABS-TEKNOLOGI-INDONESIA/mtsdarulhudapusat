@@ -1,6 +1,6 @@
 ---
 enable: true
-title: "Apa Kata Orang Tentang MTs Negeri 1 Pandeglang"
+title: "Apa Kata Orang Tentang MTs Darul Huda Pusat"
 description: "Baca beberapa testimoni di bawah ini untuk mengetahui pendapat orang tentang kami."
 
 # Testimonials
@@ -8,7 +8,7 @@ testimonials:
   - name: "Yuliana Ramadhani"
     designation: "Alumni 2013"
     avatar: "/images/avatar-sm.png"
-    content: "Selama di MTs Negeri 1 Pandeglang, saya mendapatkan tidak hanya ilmu, tetapi juga nilai-nilai kehidupan yang sangat berharga."
+    content: "Selama di MTs Darul Huda Pusat, saya mendapatkan tidak hanya ilmu, tetapi juga nilai-nilai kehidupan yang sangat berharga."
 
   - name: "Arif Hidayat"
     designation: "Alumni 2016"
@@ -18,7 +18,7 @@ testimonials:
   - name: "Maya Putri"
     designation: "Alumni 2018"
     avatar: "/images/avatar-sm.png"
-    content: "MTsN 1 Pandeglang tidak hanya fokus pada akademik, tapi juga aktif dalam kegiatan seni dan olahraga. Saya merasa berkembang secara menyeluruh."
+    content: "MTs Darul Huda Pusat tidak hanya fokus pada akademik, tapi juga aktif dalam kegiatan seni dan olahraga. Saya merasa berkembang secara menyeluruh."
 
   - name: "Dimas Kurniawan"
     designation: "Alumni 2020"
@@ -28,12 +28,12 @@ testimonials:
   - name: "Sri Mulyani"
     designation: "Alumni 2012"
     avatar: "/images/avatar-sm.png"
-    content: "Atmosfer belajar di MTsN 1 Pandeglang sangat menyenangkan, saya merasa didukung sepenuhnya untuk sukses."
+    content: "Atmosfer belajar di MTs Darul Huda Pusat sangat menyenangkan, saya merasa didukung sepenuhnya untuk sukses."
 
   - name: "Hendra Gunawan"
     designation: "Alumni 2015"
     avatar: "/images/avatar-sm.png"
-    content: "MTs Negeri 1 Pandeglang adalah tempat saya belajar percaya diri. Kini saya menerapkan banyak pelajaran dari sana di dunia kerja."
+    content: "MTs Darul Huda Pusat adalah tempat saya belajar percaya diri. Kini saya menerapkan banyak pelajaran dari sana di dunia kerja."
 
   - name: "Laila Nuraini"
     designation: "Alumni 2019"
@@ -58,7 +58,7 @@ testimonials:
   - name: "Intan Fadillah"
     designation: "Alumni 2014"
     avatar: "/images/avatar-sm.png"
-    content: "Di MTsN 1 Pandeglang, saya belajar pentingnya kedisiplinan dan semangat kebersamaan. Itu menjadi bekal besar dalam perjalanan hidup saya."
+    content: "Di MTs Darul Huda Pusat, saya belajar pentingnya kedisiplinan dan semangat kebersamaan. Itu menjadi bekal besar dalam perjalanan hidup saya."
 
   - name: "Rizky Fauzan"
     designation: "Alumni 2017"
@@ -68,7 +68,7 @@ testimonials:
   - name: "Nurul Hikmah"
     designation: "Alumni 2016"
     avatar: "/images/avatar-sm.png"
-    content: "MTs Negeri 1 Pandeglang telah membuka banyak pintu kesempatan dalam hidup saya, baik akademik maupun non-akademik."
+    content: "MTs Darul Huda Pusat telah membuka banyak pintu kesempatan dalam hidup saya, baik akademik maupun non-akademik."
 
   - name: "Fajar Nugroho"
     designation: "Alumni 2022"
@@ -78,7 +78,7 @@ testimonials:
   - name: "Dewi Anggraini"
     designation: "Alumni 2013"
     avatar: "/images/avatar-sm.png"
-    content: "MTsN 1 Pandeglang memberikan saya kepercayaan diri untuk mengejar impian saya, bahkan di luar zona nyaman."
+    content: "MTs Darul Huda Pusat memberikan saya kepercayaan diri untuk mengejar impian saya, bahkan di luar zona nyaman."
 
   - name: "Galih Prasetyo"
     designation: "Alumni 2015"
@@ -93,5 +93,5 @@ testimonials:
   - name: "Reza Maulana"
     designation: "Alumni 2021"
     avatar: "/images/avatar-sm.png"
-    content: "MTs Negeri 1 Pandeglang punya semangat inovatif. Banyak teknologi pembelajaran diterapkan secara menarik."
+    content: "MTs Darul Huda Pusat punya semangat inovatif. Banyak teknologi pembelajaran diterapkan secara menarik."
 ---

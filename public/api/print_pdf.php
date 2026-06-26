@@ -157,7 +157,7 @@ class PDF extends FPDF
         $this->Cell(0, 6, 'MADRASAH TSANAWIYAH NEGERI 1 PANDEGLANG', 0, 1, 'C');
         $this->SetFont('Arial', '',   9);
         $this->Cell(0, 4, 'Jl. Raya Labuan Km. 5,7 Palurahan, Kaduhejo, Pandeglang - Banten 42253', 0, 1, 'C');
-        $this->Cell(0, 4, 'Website: https://mtsn1pandeglang.sch.id | Email: adm@mtsn1pandeglang.sch.id', 0, 1, 'C');
+        $this->Cell(0, 4, 'Website: https://mtsdarulhudapusat.sch.id | Email: adm@mtsdarulhudapusat.sch.id', 0, 1, 'C');
 
         $this->SetLineWidth(0.5);
         $this->Line(10, 39, 200, 39);
@@ -170,7 +170,7 @@ class PDF extends FPDF
     {
         $this->SetY(-15);
         $this->SetFont('Arial', 'I', 8);
-        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTsN 1 Pandeglang | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
+        $this->Cell(0, 10, 'Hal ' . $this->PageNo() . '/{nb} | Sistem Informasi MTs Darul Huda Pusat | Dicetak: ' . date('d/m/Y H:i') . ' WIB', 0, 0, 'C');
     }
 
     public function Row(array $data, bool $fill = false): void
