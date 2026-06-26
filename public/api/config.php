@@ -55,7 +55,7 @@ function getSignatories(): array
         ],
         'kamad' => [
             'name' => getenv('SIGN_KAMAD_NAME') ?: 'Erwan Kurtubi, S.S., M.Pd.',
-            'nip'  => getenv('SIGN_KAMAD_NIP')  ?: '000000000000000000',
+            'nip'  => getenv('SIGN_KAMAD_NIP')  ?: '198202102007101003',
             'role' => 'Kepala Madrasah,',
             'img'  => $imgBase . (getenv('SIGN_KAMAD_IMG') ?: 'tte-kepala-madrasah.png'),
         ],
