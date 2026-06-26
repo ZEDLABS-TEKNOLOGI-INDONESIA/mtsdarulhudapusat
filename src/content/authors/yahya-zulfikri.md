@@ -8,6 +8,10 @@ social:
     icon: FaGithub
     link: https://github.com/zulfikriyahya
 
+  - name: instagram
+    icon: FaInstagram
+    link: https://instagram.com/zulfikriyahya_
+
   - name: linkedin
     icon: FaLinkedin
     link: https://www.linkedin.com/in/zulfikriyahya?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app
