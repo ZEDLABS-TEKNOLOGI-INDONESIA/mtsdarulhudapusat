@@ -3,8 +3,8 @@ function getDBConnection()
 {
     $host   = getenv('DB_HOST')     ?: '192.168.1.100';
     $port   = getenv('DB_PORT')     ?: '3306';
-    $dbname = getenv('DB_DATABASE') ?: 'mtsn1pandeglang';
-    $user   = getenv('DB_USERNAME') ?: 'mtsn1pandeglang';
+    $dbname = getenv('DB_DATABASE') ?: 'mtsdarulhudapusat';
+    $user   = getenv('DB_USERNAME') ?: 'mtsdarulhudapusat';
     $pass   = getenv('DB_PASSWORD') ?: '18012000';
 
     try {
