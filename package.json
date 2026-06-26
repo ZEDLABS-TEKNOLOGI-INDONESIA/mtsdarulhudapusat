@@ -14,7 +14,10 @@
     "check": "astro check",
     "format": "prettier -w ./src",
     "generate-json": "node scripts/jsonGenerator.js",
-    "remove-darkmode": "node scripts/removeDarkmode.js && yarn format"
+    "remove-darkmode": "node scripts/removeDarkmode.js && yarn format",
+    "compress:image": "bash scripts/compress-picture.sh public",
+    "compress:video": "bash scripts/compress-video.sh public",
+    "compress": "yarn compress:image && yarn compress:video"
   },
   "dependencies": {
     "@astrojs/check": "0.9.6",
