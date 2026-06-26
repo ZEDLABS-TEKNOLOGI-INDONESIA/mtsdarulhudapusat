@@ -6,7 +6,11 @@ image: "/images/logo.png"
 draft: false
 ---
 
-### Inkubator Generasi Cendekia & Berkarakter
+### MTs Negeri 1 Pandeglang
+
+#### Inkubator Generasi Cendekia & Berkarakter
+
+---
 
 Kami hadir bukan sekadar sebagai ruang kelas, melainkan sebagai ekosistem pendidikan holistik yang menyatukan tradisi keilmuan dengan kemuliaan adab. Di MTs Negeri 1 Pandeglang, kami merajut kecerdasan intelektual, kematangan spiritual, dan kepekaan sosial dalam satu sinergi yang harmonis.
 Identitas kami terukir kokoh dalam lima pilar nilai yang menjadi denyut nadi kehidupan madrasah:
